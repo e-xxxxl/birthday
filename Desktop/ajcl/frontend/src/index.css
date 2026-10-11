@@ -1,0 +1,184 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   AJ Courier Logistics — design tokens
+   Reference language: Quicksand type, near-black + paper white,
+   pill buttons, generous whitespace, one warm accent (amber).
+   ───────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Quicksand is loaded via <link> in the root layout (see the reference site),
+     so the build never needs network access. This stack degrades cleanly if
+     Google Fonts is unreachable at runtime. */
+  --font-quicksand: "Quicksand", ui-rounded, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-quicksand);
+
+  /* Ink / paper */
+  --color-ink: #141414;
+  --color-ink-soft: #3d3d3d;
+  --color-muted: #6b6b6b;
+  --color-line: #e6e6e6;
+  --color-line-strong: #d4d4d4;
+  --color-paper: #ffffff;
+  --color-surface: #f7f7f5;
+  --color-surface-2: #f0efec;
+
+  /* Brand accent — amber */
+  --color-accent: #ffb100;
+  --color-accent-dark: #e09a00;
+  --color-accent-soft: #fff4d6;
+
+  /* Secondary — ink navy for depth */
+  --color-navy: #16233a;
+
+  /* Status */
+  --color-success: #15803d;
+  --color-success-soft: #dcfce7;
+  --color-warning: #b45309;
+  --color-warning-soft: #fef3c7;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fee2e2;
+  --color-info: #1d4ed8;
+  --color-info-soft: #dbeafe;
+
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(20, 20, 20, 0.04), 0 8px 24px -12px rgba(20, 20, 20, 0.12);
+  --shadow-pop: 0 12px 40px -12px rgba(20, 20, 20, 0.22);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* keep anchored sections clear of the sticky header */
+    scroll-padding-top: 4.5rem;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+}
+
+@layer components {
+  .container-page {
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Reusable field shell used by inputs / autocomplete */
+  .field-shell {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-line-strong);
+    background: var(--color-paper);
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.95rem;
+    transition: border-color 0.15s var(--ease-out-soft), box-shadow 0.15s var(--ease-out-soft);
+  }
+  .field-shell:focus-within {
+    border-color: var(--color-ink);
+    box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.08);
+  }
+  .field-shell[data-invalid="true"] {
+    border-color: var(--color-danger);
+  }
+  .field-shell[data-invalid="true"]:focus-within {
+    box-shadow: 0 0 0 3px var(--color-danger-soft);
+  }
+}
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s var(--ease-out-soft) both;
+  }
+  .animate-fade-in {
+    animation: fade-in 0.4s var(--ease-out-soft) both;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,45 @@
+# ─────────────────────────────────────────────────────────────────────
+#  AJ Courier & Logistics — SPA routing (Apache / LiteSpeed shared hosting)
+#
+#  Put this in the SUBDOMAIN's document root — the same folder as
+#  index.html and assets/ (e.g. public_html/rd/), NOT public_html/.
+#  It's a dotfile: enable "show hidden files" or the upload skips it,
+#  and deep links like /book/payment/callback return "Not Found".
+# ─────────────────────────────────────────────────────────────────────
+
+# Backstop that needs no mod_rewrite: any missing path serves the SPA
+# shell, and React Router renders the right screen. (Status stays 404,
+# which is harmless for an app behind login.)
+ErrorDocument 404 /index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Real files / directories are served untouched.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else → the SPA shell (served with a normal 200).
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+  <FilesMatch "\.(js|css|woff2?|png|svg|webp|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# ── Troubleshooting ──────────────────────────────────────────────────
+#  • Whole site now shows 500 Internal Server Error → this host blocks
+#    mod_rewrite in .htaccess. Delete the <IfModule mod_rewrite.c> block
+#    above; the ErrorDocument line alone is enough.
+#  • Deep links still 404 → the subdomain is served through the main
+#    domain's docroot. In public_html/.htaccess, add this as the FIRST
+#    line inside its <IfModule mod_rewrite.c> block:
+#        RewriteRule ^rd/ - [L]
+#    (replace "rd/" with the actual subdomain folder name).

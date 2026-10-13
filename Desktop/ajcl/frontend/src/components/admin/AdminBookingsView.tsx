@@ -123,7 +123,7 @@ export function AdminBookingsView({ initialStatus }: { initialStatus: string }) 
         />
         <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="all">All statuses</option>
-          {[...BOOKING_STATUS_FLOW, "cancelled"].map((s) => (
+          {[...BOOKING_STATUS_FLOW, "cancelled", "returned"].map((s) => (
             <option key={s} value={s}>
               {s.replace("_", " ")}
             </option>
@@ -133,7 +133,7 @@ export function AdminBookingsView({ initialStatus }: { initialStatus: string }) 
           <option value="all">All payments</option>
           {Object.values(PAYMENT_STATUS).map((s) => (
             <option key={s} value={s}>
-              {s}
+              {s.replace(/_/g, " ")}
             </option>
           ))}
         </Select>

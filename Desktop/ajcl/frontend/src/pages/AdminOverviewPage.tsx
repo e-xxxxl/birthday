@@ -97,6 +97,30 @@ export function AdminOverviewPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <Link
+          href="/admin/partners"
+          className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card transition hover:border-ink sm:p-5"
+        >
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">Owed by partners</p>
+          <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
+            {formatNaira(stats.partnerOutstanding ?? 0)}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            {stats.partnersOwing ? `${stats.partnersOwing} partner${stats.partnersOwing === 1 ? "" : "s"} owing` : "All settled"}
+          </p>
+        </Link>
+        <Link
+          href="/admin/bookings?status=returned"
+          className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card transition hover:border-ink sm:p-5"
+        >
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">Returned orders</p>
+          <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums sm:mt-2 sm:text-2xl">
+            {stats.returnedBookings ?? 0}
+          </p>
+        </Link>
+      </div>
+
       {recentProofs.length > 0 ? (
         <section>
           <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Recent handovers</h2>

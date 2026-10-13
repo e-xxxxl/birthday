@@ -13,7 +13,7 @@ import { BookingActions } from "@/components/dashboard/BookingActions";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http } from "@/lib/http";
-import { DELIVERY_TYPES } from "@/config/booking";
+import { DELIVERY_TYPES, isFundedPayment } from "@/config/booking";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import type { BookingDTO, ProofDTO } from "@/types";
 
@@ -64,7 +64,7 @@ export function BookingDetailPage() {
 
       <BookingActions booking={booking} />
 
-      {booking.payment.status === "paid" && booking.status !== "cancelled" ? (
+      {isFundedPayment(booking.payment.status) && booking.status !== "cancelled" ? (
         <HandoverCodeCard
           title="Pickup code"
           description="Only you (the sender) can see this. Show it to the rider — QR or digits — when they arrive to collect the package."
@@ -193,7 +193,7 @@ export function BookingDetailPage() {
               <dl className="mt-4 space-y-1 border-t border-line pt-3 text-xs text-muted">
                 <div className="flex justify-between">
                   <dt>Status</dt>
-                  <dd className="font-semibold text-ink-soft">{booking.payment.status}</dd>
+                  <dd className="font-semibold capitalize text-ink-soft">{booking.payment.status.replace(/_/g, " ")}</dd>
                 </div>
                 {booking.payment.reference ? (
                   <div className="flex justify-between">

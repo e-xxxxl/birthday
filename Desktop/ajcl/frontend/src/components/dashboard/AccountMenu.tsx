@@ -27,6 +27,7 @@ export function AccountMenu() {
           { label: "Bookings", href: "/admin/bookings" },
           { label: "Vehicles & pricing", href: "/admin/vehicles" },
           { label: "Riders", href: "/admin/riders" },
+          { label: "Partners", href: "/admin/partners" },
           ...(user.superAdmin ? [{ label: "Team", href: "/admin/team" }] : []),
         ]
       : user.role === "rider"
@@ -38,6 +39,7 @@ export function AccountMenu() {
         : [
             { label: "Dashboard", href: "/dashboard" },
             { label: "My bookings", href: "/dashboard/bookings" },
+            ...(user.partner ? [{ label: "Account statement", href: "/dashboard/account" }] : []),
             { label: "Book a delivery", href: "/book" },
           ];
 

@@ -25,7 +25,7 @@ export function RiderJobsPage() {
 
   const jobs = data?.jobs ?? [];
   const active = jobs.filter((j) => j.status === "driver_assigned" || j.status === "in_transit");
-  const completed = jobs.filter((j) => j.status === "delivered");
+  const completed = jobs.filter((j) => j.status === "delivered" || j.status === "returned");
   const list = tab === "active" ? active : completed;
 
   return (

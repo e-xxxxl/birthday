@@ -10,6 +10,8 @@ export type SessionUser = {
   email: string;
   phone: string;
   role: "customer" | "admin" | "rider";
+  /** Present for partner accounts: orders are billed to the account instead of paid in the app. */
+  partner?: { active: true; company?: string };
   /** Elevated admin — can create admins and delete bookings. */
   superAdmin?: boolean;
   /** Only present when role === "rider". */
@@ -163,6 +165,9 @@ export type BookingDTO = {
   };
   assignedDriver?: { name?: string; phone?: string; plate?: string };
   assignedRiderId?: string;
+  returnedAt?: string;
+  returnReason?: string;
+  returnNote?: string;
   handover?: HandoverStatusDTO;
   /** The sender's pickup code — only ever included for the booking's own owner. */
   pickupCode?: string;
@@ -207,6 +212,63 @@ export type RiderRouteDTO = {
   maxDetourKm: number;
 };
 
+
+
+export type PartnerPaymentDTO = {
+  id: string;
+  amount: number;
+  method: "transfer" | "cash" | "cheque" | "other";
+  reference?: string;
+  note?: string;
+  receivedAt: string;
+  recordedByName?: string;
+};
+
+export type PartnerLedgerOrderDTO = {
+  reference: string;
+  createdAt: string;
+  status: BookingStatus;
+  total: number;
+  /** How much of this order the recorded payments have covered (oldest orders first). */
+  allocated: number;
+  settled: boolean;
+  pickup: string;
+  destination: string;
+};
+
+/** A partner's account: what they've been billed, what they've paid, what they still owe. */
+export type PartnerLedgerDTO = {
+  billed: number;
+  paid: number;
+  outstanding: number;
+  /** Overpayment, if the partner has paid more than they've been billed. */
+  credit: number;
+  creditLimit: number | null;
+  /** Room left under the credit limit (null when there is no limit). */
+  availableCredit: number | null;
+  orders: PartnerLedgerOrderDTO[];
+  payments: PartnerPaymentDTO[];
+};
+
+/** A partner as the admin sees them. */
+export type PartnerAccountDTO = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  active: boolean;
+  company?: string;
+  markupPercent: number;
+  creditLimit: number | null;
+  notes?: string;
+  since?: string;
+  billed: number;
+  paid: number;
+  outstanding: number;
+  orderCount: number;
+};
 
 /** Evidence a rider captured at pickup or delivery. Location is for admins only. */
 export type ProofDTO = {

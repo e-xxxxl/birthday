@@ -50,9 +50,11 @@ const paymentTone: Record<string, Tone> = {
   [PAYMENT_STATUS.unpaid]: "neutral",
   [PAYMENT_STATUS.failed]: "danger",
   [PAYMENT_STATUS.refunded]: "info",
+  [PAYMENT_STATUS.on_account]: "info",
 };
 
 export function PaymentBadge({ status }: { status: string }) {
-  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  const text = status.replace(/_/g, " ");
+  const label = text.charAt(0).toUpperCase() + text.slice(1);
   return <Badge tone={paymentTone[status] ?? "neutral"}>{label}</Badge>;
 }

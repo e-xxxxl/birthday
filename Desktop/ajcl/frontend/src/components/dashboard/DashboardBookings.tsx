@@ -10,12 +10,14 @@ type Buckets = {
   pending: BookingDTO[];
   completed: BookingDTO[];
   cancelled: BookingDTO[];
+  returned: BookingDTO[];
 };
 
 const TABS = [
   { key: "active", label: "Active" },
   { key: "completed", label: "Completed" },
   { key: "cancelled", label: "Cancelled" },
+  { key: "returned", label: "Returned" },
 ] as const;
 
 export function DashboardBookings({ buckets }: { buckets: Buckets }) {
@@ -26,14 +28,14 @@ export function DashboardBookings({ buckets }: { buckets: Buckets }) {
 
   return (
     <section>
-      <div className="flex items-center gap-1 border-b border-line">
+      <div className="no-scrollbar flex items-center gap-1 overflow-x-auto border-b border-line">
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
             className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition",
+              "-mb-px shrink-0 border-b-2 px-3 py-2 text-sm font-semibold transition",
               tab === t.key
                 ? "border-ink text-ink"
                 : "border-transparent text-muted hover:text-ink",

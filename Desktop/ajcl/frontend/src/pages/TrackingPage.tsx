@@ -47,7 +47,8 @@ export function TrackingPage() {
 }
 
 function TrackingView({ tracking }: { tracking: TrackingDTO }) {
-  const progress = tracking.status === "cancelled" ? -1 : BOOKING_STATUS_FLOW.indexOf(tracking.status);
+  const off = tracking.status === "cancelled" || tracking.status === "returned";
+  const progress = off ? -1 : BOOKING_STATUS_FLOW.indexOf(tracking.status);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -66,6 +67,10 @@ function TrackingView({ tracking }: { tracking: TrackingDTO }) {
         <CardBody>
           {tracking.status === "cancelled" ? (
             <p className="text-sm text-[var(--color-danger)]">This delivery was cancelled.</p>
+          ) : tracking.status === "returned" ? (
+            <p className="text-sm text-[var(--color-warning)]">
+              This package could not be delivered and was returned to the sender.
+            </p>
           ) : (
             <ol className="space-y-4">
               {BOOKING_STATUS_FLOW.map((s, i) => {
@@ -123,7 +128,7 @@ function TrackingView({ tracking }: { tracking: TrackingDTO }) {
         </Card>
       ) : null}
 
-      {tracking.status !== "cancelled" && tracking.status !== "delivered" ? (
+      {!off && tracking.status !== "delivered" ? (
         <HandoverCodeCard
           title="Your delivery code"
           description="Show this to the rider — QR or digits — when the package arrives, so they can confirm it reached you."

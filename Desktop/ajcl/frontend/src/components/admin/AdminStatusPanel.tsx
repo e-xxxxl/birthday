@@ -5,7 +5,7 @@ import { Select, Textarea } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/Feedback";
 import { useToast } from "@/components/ui/Toast";
 import { http, HttpError } from "@/lib/http";
-import { BOOKING_STATUS_FLOW, BOOKING_STATUS_META } from "@/config/booking";
+import { BOOKING_STATUS_FLOW, BOOKING_STATUS_META, RETURN_REASONS } from "@/config/booking";
 import type { BookingDTO } from "@/types";
 
 // "driver_assigned", "in_transit" and "delivered" are reached via the "Assign
@@ -15,12 +15,14 @@ const NEXT: Record<string, string[]> = {
   pending: ["confirmed", "cancelled"],
   confirmed: ["cancelled"],
   driver_assigned: ["cancelled"],
-  in_transit: ["cancelled"],
-  delivered: [],
+  in_transit: ["returned", "cancelled"],
+  // A delivered order can still come back later.
+  delivered: ["returned"],
   cancelled: [],
+  returned: [],
 };
 
-const ALL_STATUSES: string[] = [...BOOKING_STATUS_FLOW, "cancelled"];
+const ALL_STATUSES: string[] = [...BOOKING_STATUS_FLOW, "cancelled", "returned"];
 
 function labelFor(s: string): string {
   return BOOKING_STATUS_META[s as keyof typeof BOOKING_STATUS_META]?.label ?? s;
@@ -37,6 +39,7 @@ export function AdminStatusPanel({
 
   const [force, setForce] = useState(false);
   const [note, setNote] = useState("");
+  const [returnReason, setReturnReason] = useState<string>(RETURN_REASONS[0].value);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,6 +68,7 @@ export function AdminStatusPanel({
         status,
         note: note.trim() || undefined,
         force,
+        returnReason: status === "returned" ? returnReason : undefined,
       });
       toast.success("Status updated", `Booking is now ${labelFor(status)}.`);
       setNote("");
@@ -97,8 +101,24 @@ export function AdminStatusPanel({
           ))}
         </Select>
 
+        {status === "returned" ? (
+          <>
+            <Select label="Why was it returned?" value={returnReason} onChange={(e) => setReturnReason(e.target.value)}>
+              {RETURN_REASONS.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </Select>
+            <p className="text-xs text-muted">
+              The sender is told the package came back and why. A partner order stays on their bill unless you
+              change its amount.
+            </p>
+          </>
+        ) : null}
+
         <Textarea
-          label="Note (shown in history)"
+          label={status === "returned" ? "Details for the sender (optional)" : "Note (shown in history)"}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={2}

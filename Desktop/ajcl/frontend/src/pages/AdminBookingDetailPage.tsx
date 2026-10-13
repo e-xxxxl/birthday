@@ -12,12 +12,13 @@ import { PriceBreakdown } from "@/components/booking/PriceBreakdown";
 import { AdminStatusPanel } from "@/components/admin/AdminStatusPanel";
 import { AdminRiderPanel } from "@/components/admin/AdminRiderPanel";
 import { AdminHandoverPanel } from "@/components/admin/AdminHandoverPanel";
+import { AdminAmountPanel } from "@/components/admin/AdminAmountPanel";
 import { ProofGallery } from "@/components/booking/ProofGallery";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http, HttpError } from "@/lib/http";
-import { DELIVERY_TYPES } from "@/config/booking";
+import { DELIVERY_TYPES, returnReasonLabel } from "@/config/booking";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import type { BookingDTO, ProofDTO } from "@/types";
 import type { AdminAuditEntry, AdminPaymentEntry } from "@/types/admin";
@@ -114,6 +115,20 @@ export function AdminBookingDetailPage() {
             </Card>
           </div>
 
+          {booking.status === "returned" ? (
+            <Card className="border-[var(--color-warning)]/40">
+              <CardHeader title="Returned order" />
+              <CardBody className="space-y-1 text-sm">
+                <p>
+                  <span className="text-muted">Reason: </span>
+                  <strong>{returnReasonLabel(booking.returnReason)}</strong>
+                </p>
+                {booking.returnNote ? <p className="text-ink-soft">{booking.returnNote}</p> : null}
+                {booking.returnedAt ? <p className="text-xs text-muted">Marked returned {formatDateTime(booking.returnedAt)}</p> : null}
+              </CardBody>
+            </Card>
+          ) : null}
+
           <AdminRiderPanel
             key={`rider:${booking.updatedAt}`}
             booking={booking}
@@ -186,7 +201,11 @@ export function AdminBookingDetailPage() {
               <PriceBreakdown price={booking.pricing} />
               <div className="space-y-2 border-t border-line pt-3 text-xs">
                 {payments.length === 0 ? (
-                  <p className="text-muted">No payment attempts recorded.</p>
+                  <p className="text-muted">
+                    {booking.payment.status === "on_account"
+                      ? "Billed to the partner's account. Payments are recorded on the partner's page."
+                      : "No payment attempts recorded."}
+                  </p>
                 ) : (
                   payments.map((p) => (
                     <div
@@ -212,6 +231,12 @@ export function AdminBookingDetailPage() {
         <div className="space-y-6 lg:sticky lg:top-28 lg:self-start">
           <AdminStatusPanel
             key={`${booking.status}:${booking.updatedAt}`}
+            booking={booking}
+            onChanged={reload}
+          />
+
+          <AdminAmountPanel
+            key={`amount:${booking.pricing.total}:${booking.updatedAt}`}
             booking={booking}
             onChanged={reload}
           />

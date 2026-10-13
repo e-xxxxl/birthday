@@ -26,6 +26,7 @@ import { PaymentCallbackPage } from "@/pages/PaymentCallbackPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { DashboardBookingsPage } from "@/pages/DashboardBookingsPage";
 import { BookingDetailPage } from "@/pages/BookingDetailPage";
+import { PartnerStatementPage } from "@/pages/PartnerStatementPage";
 import { AdminLoginPage } from "@/pages/AdminLoginPage";
 import { AdminOverviewPage } from "@/pages/AdminOverviewPage";
 import { AdminBookingsPage } from "@/pages/AdminBookingsPage";
@@ -33,6 +34,8 @@ import { AdminBookingDetailPage } from "@/pages/AdminBookingDetailPage";
 import { AdminVehiclesPage } from "@/pages/AdminVehiclesPage";
 import { AdminTeamPage } from "@/pages/AdminTeamPage";
 import { AdminRidersPage } from "@/pages/AdminRidersPage";
+import { AdminPartnersPage } from "@/pages/AdminPartnersPage";
+import { AdminPartnerDetailPage } from "@/pages/AdminPartnerDetailPage";
 import { RiderLoginPage } from "@/pages/RiderLoginPage";
 import { RiderJobsPage } from "@/pages/RiderJobsPage";
 import { RiderJobDetailPage } from "@/pages/RiderJobDetailPage";
@@ -71,6 +74,7 @@ export function App() {
             <Route index element={<DashboardPage />} />
             <Route path="bookings" element={<DashboardBookingsPage />} />
             <Route path="bookings/:reference" element={<BookingDetailPage />} />
+            <Route path="account" element={<PartnerStatementPage />} />
           </Route>
 
           <Route path="admin/login" element={<AdminLoginPage />} />
@@ -79,6 +83,8 @@ export function App() {
             <Route path="bookings" element={<AdminBookingsPage />} />
             <Route path="bookings/:reference" element={<AdminBookingDetailPage />} />
             <Route path="riders" element={<AdminRidersPage />} />
+            <Route path="partners" element={<AdminPartnersPage />} />
+            <Route path="partners/:id" element={<AdminPartnerDetailPage />} />
             <Route path="vehicles" element={<AdminVehiclesPage />} />
             <Route path="team" element={<AdminTeamPage />} />
           </Route>

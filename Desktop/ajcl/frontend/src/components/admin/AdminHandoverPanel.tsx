@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { http, HttpError } from "@/lib/http";
 import { formatDateTime } from "@/lib/utils";
+import { isFundedPayment } from "@/config/booking";
 import type { BookingDTO } from "@/types";
 
 /** Read-only view of the pickup/delivery handover codes' status — never the codes
@@ -12,7 +13,7 @@ export function AdminHandoverPanel({ booking, onChanged }: { booking: BookingDTO
   const toast = useToast();
   const [resetting, setResetting] = useState<"pickup" | "delivery" | null>(null);
 
-  if (booking.payment.status !== "paid" || booking.status === "cancelled") return null;
+  if (!isFundedPayment(booking.payment.status) || booking.status === "cancelled") return null;
   const h = booking.handover;
   if (!h) return null;
 

@@ -1,16 +1,32 @@
 import { cn, formatDateTime } from "@/lib/utils";
-import { BOOKING_STATUS_FLOW, BOOKING_STATUS_META } from "@/config/booking";
+import { BOOKING_STATUS_FLOW, BOOKING_STATUS_META, returnReasonLabel } from "@/config/booking";
 import type { BookingDTO } from "@/types";
 
 export function StatusTimeline({ booking }: { booking: BookingDTO }) {
   const cancelled = booking.status === "cancelled";
+  const returned = booking.status === "returned";
   const currentIndex = BOOKING_STATUS_FLOW.indexOf(
-    booking.status === "cancelled" ? "pending" : booking.status,
+    booking.status === "cancelled" || booking.status === "returned" ? "pending" : booking.status,
   );
 
   // Latest timestamp we saw each status change at.
   const stampFor = (status: string) =>
     [...booking.statusHistory].reverse().find((h) => h.status === status)?.at;
+
+  if (returned) {
+    const when = booking.returnedAt ?? stampFor("returned");
+    return (
+      <div className="rounded-xl border border-[var(--color-warning)]/40 bg-[var(--color-warning-soft)] p-4">
+        <p className="text-sm font-bold text-[var(--color-warning)]">Order returned</p>
+        {when ? <p className="text-xs text-[var(--color-warning)]/80">{formatDateTime(when)}</p> : null}
+        <p className="mt-1 text-sm text-ink-soft">
+          The package could not be delivered and was returned. Reason:{" "}
+          <strong>{returnReasonLabel(booking.returnReason)}</strong>.
+        </p>
+        {booking.returnNote ? <p className="mt-1 text-sm text-ink-soft">{booking.returnNote}</p> : null}
+      </div>
+    );
+  }
 
   if (cancelled) {
     const when = stampFor("cancelled");

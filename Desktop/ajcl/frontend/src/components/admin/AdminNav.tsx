@@ -8,6 +8,7 @@ const baseItems = [
   { label: "Overview", href: "/admin" },
   { label: "Bookings", href: "/admin/bookings" },
   { label: "Riders", href: "/admin/riders" },
+  { label: "Partners", href: "/admin/partners" },
   { label: "Vehicles & Pricing", href: "/admin/vehicles" },
 ];
 

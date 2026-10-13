@@ -3,7 +3,7 @@ import { AppLink as Link } from "@/components/ui/AppLink";
 import { cn } from "@/lib/utils";
 import { BOOKING_STATUS_FLOW, BOOKING_STATUS_META } from "@/config/booking";
 
-const options = ["all", ...BOOKING_STATUS_FLOW, "cancelled"] as const;
+const options = ["all", ...BOOKING_STATUS_FLOW, "cancelled", "returned"] as const;
 
 export function BookingsFilter({ current }: { current: string }) {
   return (

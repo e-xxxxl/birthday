@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { http, HttpError } from "@/lib/http";
 import { formatNaira } from "@/lib/utils";
 import { site } from "@/config/site";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { isFundedPayment } from "@/config/booking";
 import type { BookingDTO } from "@/types";
 
 const WhatsAppIcon = () => (
@@ -13,23 +15,34 @@ const WhatsAppIcon = () => (
 );
 
 export function BookingActions({ booking }: { booking: BookingDTO }) {
+  const { user } = useAuth();
+  const isPartner = Boolean(user?.partner);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const terminal = booking.status === "delivered" || booking.status === "cancelled";
-  const needsPayment = booking.payment.status !== "paid" && booking.status !== "cancelled";
+  const terminal =
+    booking.status === "delivered" || booking.status === "cancelled" || booking.status === "returned";
+  const needsPayment =
+    !isFundedPayment(booking.payment.status) &&
+    booking.status !== "cancelled" &&
+    booking.status !== "returned";
 
   async function retryPayment() {
     setPaying(true);
     setError(null);
     try {
+      if (isPartner) {
+        await http.post(`/api/bookings/${encodeURIComponent(booking.bookingReference)}/place-on-account`);
+        window.location.reload();
+        return;
+      }
       const init = await http.post<{ authorizationUrl: string }>("/api/payments/initialize", {
         bookingReference: booking.bookingReference,
       });
       window.location.href = init.authorizationUrl;
     } catch (err) {
       setPaying(false);
-      setError(err instanceof HttpError ? err.message : "Could not start payment.");
+      setError(err instanceof HttpError ? err.message : isPartner ? "Could not place the order." : "Could not start payment.");
     }
   }
 
@@ -50,8 +63,12 @@ export function BookingActions({ booking }: { booking: BookingDTO }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-ink-soft">
           {needsPayment
-            ? `Complete payment of ${formatNaira(booking.pricing.total)} to confirm this booking.`
-            : "Need to change or cancel this delivery? Our team will sort it out on WhatsApp."}
+            ? isPartner
+              ? `Place this order of ${formatNaira(booking.pricing.total)} on your account to confirm it.`
+              : `Complete payment of ${formatNaira(booking.pricing.total)} to confirm this booking.`
+            : booking.payment.status === "on_account"
+              ? "This order is billed to your partner account. Need to change or cancel it? Our team will sort it out on WhatsApp."
+              : "Need to change or cancel this delivery? Our team will sort it out on WhatsApp."}
         </p>
         <div className="flex flex-wrap gap-2">
           <Button

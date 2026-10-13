@@ -12,6 +12,10 @@ export type AdminStats = {
   activeDeliveries: number;
   completedDeliveries: number;
   cancelledBookings: number;
+  returnedBookings: number;
+  /** Total owed by partners, and how many partners owe something. */
+  partnerOutstanding: number;
+  partnersOwing: number;
   revenue: number;
   revenueThisMonth: number;
   customers: number;

@@ -30,7 +30,6 @@ export function BookingDetailPage() {
   if (error || !data) {
     return (
       <EmptyState
-        icon="🔍"
         title="Booking not found"
         description={error ?? "We couldn't find that booking."}
         action={
@@ -91,7 +90,7 @@ export function BookingDetailPage() {
               (booking.assignedDriver.name ||
                 booking.assignedDriver.phone ||
                 booking.assignedDriver.plate) ? (
-                <div className="mt-4 rounded-xl bg-surface p-4 text-sm">
+                <div className="mt-4 rounded-sm bg-surface p-4 text-sm">
                   <p className="font-bold">Your rider</p>
                   {booking.assignedDriver.name ? (
                     <p className="mt-0.5 text-ink-soft">{booking.assignedDriver.name}</p>
@@ -219,7 +218,7 @@ export function BookingDetailPage() {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs font-bold uppercase tracking-wide text-muted">{label}</dt>
+      <dt className="rule-label">{label}</dt>
       <dd className="mt-0.5">{value}</dd>
     </div>
   );

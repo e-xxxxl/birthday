@@ -54,11 +54,11 @@ export function ReviewStep({ goNext, goBack, goTo }: WizardStepProps) {
             />
             <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4 text-sm">
               <div>
-                <dt className="text-xs font-bold uppercase tracking-wide text-muted">Type</dt>
+                <dt className="rule-label">Type</dt>
                 <dd>{DELIVERY_TYPES[draft.deliveryType].label}</dd>
               </div>
               <div>
-                <dt className="text-xs font-bold uppercase tracking-wide text-muted">When</dt>
+                <dt className="rule-label">When</dt>
                 <dd>
                   {draft.scheduledDate ? formatDate(draft.scheduledDate) : "—"} · {draft.scheduledTime}
                 </dd>

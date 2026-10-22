@@ -9,7 +9,7 @@ export function BookingCard({ booking, base = "/dashboard/bookings" }: { booking
   return (
     <Link
       href={`${base}/${booking.bookingReference}`}
-      className="block rounded-2xl border border-line bg-paper p-5 shadow-card transition hover:-translate-y-0.5 hover:border-ink"
+      className="block rounded-2xl border border-line bg-paper shadow-card p-5 transition hover:-translate-y-0.5 hover:border-ink"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -23,7 +23,7 @@ export function BookingCard({ booking, base = "/dashboard/bookings" }: { booking
 
       <div className="mt-4 space-y-1.5 text-sm">
         <p className="flex items-center gap-2">
-          <span className="size-2 shrink-0 rounded-full bg-[var(--color-success)]" />
+          <span className="size-2 shrink-0 rounded-sm bg-[var(--color-success)]" />
           <span className="truncate text-ink-soft">{booking.pickup.formattedAddress}</span>
         </p>
         {booking.stops.length > 0 ? (
@@ -32,7 +32,7 @@ export function BookingCard({ booking, base = "/dashboard/bookings" }: { booking
           </p>
         ) : null}
         <p className="flex items-center gap-2">
-          <span className="size-2 shrink-0 rounded-full bg-[var(--color-danger)]" />
+          <span className="size-2 shrink-0 rounded-sm bg-[var(--color-danger)]" />
           <span className="truncate text-ink-soft">{booking.destination.formattedAddress}</span>
         </p>
       </div>
@@ -44,7 +44,7 @@ export function BookingCard({ booking, base = "/dashboard/bookings" }: { booking
         </span>
         <span className="flex shrink-0 items-center gap-2">
           <PaymentBadge status={booking.payment.status} />
-          <span className="text-sm font-bold tabular-nums">
+          <span className="text-sm font-bold font-mono tabular-nums">
             {formatNaira(booking.pricing.total)}
           </span>
         </span>

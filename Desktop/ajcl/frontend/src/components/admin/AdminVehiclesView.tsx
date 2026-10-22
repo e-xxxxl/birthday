@@ -150,7 +150,7 @@ export function AdminVehiclesView({ initialVehicles }: { initialVehicles: AdminV
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Vehicles &amp; pricing</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">Vehicles &amp; pricing</h1>
           <p className="mt-1 text-sm text-muted">
             Set the rate and fleet size for each class. A class stops accepting bookings once every
             unit is out on a delivery. Changes apply immediately.
@@ -172,7 +172,7 @@ export function AdminVehiclesView({ initialVehicles }: { initialVehicles: AdminV
             <CardBody className="space-y-3">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="grid size-11 place-items-center rounded-xl bg-surface">
+                  <span className="grid size-11 place-items-center rounded-sm bg-surface">
                     <VehicleIcon slug={v.slug} className="size-6" />
                   </span>
                   <div>
@@ -189,7 +189,7 @@ export function AdminVehiclesView({ initialVehicles }: { initialVehicles: AdminV
                 </button>
               </div>
 
-              <dl className="grid grid-cols-3 gap-2 rounded-xl bg-surface p-3 text-center text-xs">
+              <dl className="grid grid-cols-3 gap-2 rounded-sm bg-surface p-3 text-center text-xs">
                 <div>
                   <dt className="text-muted">Per km</dt>
                   <dd className="mt-0.5 font-bold">{formatNaira(v.pricePerKm)}</dd>
@@ -204,7 +204,7 @@ export function AdminVehiclesView({ initialVehicles }: { initialVehicles: AdminV
                 </div>
               </dl>
 
-              <div className="flex items-center justify-between rounded-xl bg-surface p-3 text-xs">
+              <div className="flex items-center justify-between rounded-sm bg-surface p-3 text-xs">
                 <span className="font-semibold text-muted">Fleet</span>
                 {v.fleetSize > 0 ? (
                   <span

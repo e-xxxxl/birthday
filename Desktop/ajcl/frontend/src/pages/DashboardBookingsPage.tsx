@@ -26,7 +26,7 @@ export function DashboardBookingsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">My bookings</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">My bookings</h1>
           <p className="mt-1 text-sm text-muted">{bookings.length} total</p>
         </div>
         <Button href="/book">New booking</Button>
@@ -47,7 +47,6 @@ export function DashboardBookingsPage() {
         <LoadingBlock />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon="📦"
           title={bookings.length === 0 ? "No bookings yet" : "Nothing matches this filter"}
           action={bookings.length === 0 ? <Button href="/book">Book a delivery</Button> : undefined}
         />

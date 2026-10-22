@@ -20,7 +20,7 @@ export function RiderNav({ className }: { className?: string }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition",
+              "shrink-0 rounded-sm px-3.5 py-1.5 text-sm font-semibold transition",
               active ? "bg-ink text-paper" : "text-ink-soft hover:bg-surface",
             )}
           >

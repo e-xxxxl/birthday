@@ -16,7 +16,7 @@ export function RiderLoginPage() {
         <div className="mb-6 flex justify-center">
           <Logo href={null} variant="light" />
         </div>
-        <div className="rounded-2xl bg-paper p-6 shadow-pop sm:p-8">
+        <div className="rounded-sm bg-paper p-6 shadow-pop sm:p-8">
           <h1 className="text-xl font-bold">Rider sign in</h1>
           <p className="mt-1 text-sm text-muted">
             Sign in to see your deliveries and confirm pickups &amp; drop-offs.

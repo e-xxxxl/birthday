@@ -149,7 +149,7 @@ function PartnerView({ detail, reload }: { detail: Detail; reload: () => void })
         </Link>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">{partner.company || partner.fullName}</h1>
+            <h1 className="text-3xl font-bold sm:text-4xl">{partner.company || partner.fullName}</h1>
             <p className="text-sm text-muted">
               {partner.company ? `${partner.fullName} · ` : ""}
               {partner.email} · {partner.phone}
@@ -157,7 +157,7 @@ function PartnerView({ detail, reload }: { detail: Detail; reload: () => void })
           </div>
           <span
             className={cn(
-              "rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide",
+              "rounded-sm px-3 py-1 text-xs font-bold uppercase tracking-wide",
               partner.active ? "bg-[var(--color-success-soft)] text-[var(--color-success)]" : "bg-surface-2 text-muted",
             )}
           >
@@ -168,11 +168,11 @@ function PartnerView({ detail, reload }: { detail: Detail; reload: () => void })
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         {cards.map((c) => (
-          <div key={c.label} className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card sm:p-5">
+          <div key={c.label} className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:p-5">
             <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">{c.label}</p>
             <p
               className={cn(
-                "mt-1.5 text-2xl font-bold tabular-nums [overflow-wrap:anywhere]",
+                "mt-1.5 text-2xl font-bold font-mono tabular-nums [overflow-wrap:anywhere]",
                 c.tone === "owing" && "text-[var(--color-warning)]",
                 c.tone === "clear" && "text-[var(--color-success)]",
               )}
@@ -295,7 +295,7 @@ function PartnerView({ detail, reload }: { detail: Detail; reload: () => void })
                   <div className="flex shrink-0 items-center gap-3">
                     <StatusBadge status={o.status} />
                     <div className="text-right">
-                      <p className="text-sm font-bold tabular-nums">{formatNaira(o.total)}</p>
+                      <p className="text-sm font-bold font-mono tabular-nums">{formatNaira(o.total)}</p>
                       <p
                         className={cn(
                           "text-xs font-semibold",
@@ -334,7 +334,7 @@ function PartnerView({ detail, reload }: { detail: Detail; reload: () => void })
                     {p.note ? <p className="text-xs text-ink-soft">{p.note}</p> : null}
                   </div>
                   <div className="flex items-center gap-3">
-                    <p className="font-bold tabular-nums text-[var(--color-success)]">{formatNaira(p.amount)}</p>
+                    <p className="font-bold font-mono tabular-nums text-[var(--color-success)]">{formatNaira(p.amount)}</p>
                     <Button variant="ghost" size="sm" className="text-[var(--color-danger)]" onClick={() => setRemoveTarget(p)}>
                       Remove
                     </Button>

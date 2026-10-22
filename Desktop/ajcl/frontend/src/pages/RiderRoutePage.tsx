@@ -88,10 +88,10 @@ export function RiderRoutePage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">My route</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">My route</h1>
           <p className="mt-1 text-sm text-muted">Your stops in the most efficient order.</p>
         </div>
-        <div className="rounded-full border border-line-strong px-3 py-1.5 text-sm font-semibold">
+        <div className="rounded-sm border border-line-strong px-3 py-1.5 text-sm font-semibold">
           {data.activeCount} of {data.maxActive} active order{data.maxActive === 1 ? "" : "s"}
         </div>
       </div>
@@ -124,7 +124,7 @@ export function RiderRoutePage() {
                 return (
                   <li key={`${stop.jobRef}-${stop.kind}-${i}`} className="flex gap-3">
                     <div className="flex flex-col items-center">
-                      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-ink text-xs font-bold text-paper">
+                      <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-ink text-xs font-bold text-paper">
                         {i + 1}
                       </span>
                       {i < route.stops.length - 1 ? <span className="mt-1 w-px flex-1 bg-line-strong" /> : null}
@@ -132,7 +132,7 @@ export function RiderRoutePage() {
                     <div className="min-w-0 flex-1 space-y-2 pb-1">
                       <div className="flex flex-wrap items-center gap-2 text-xs">
                         <span className="inline-flex items-center gap-1.5 font-bold uppercase tracking-wide text-muted">
-                          <span className={cn("size-2 rounded-full", k.dot)} />
+                          <span className={cn("size-2 rounded-sm", k.dot)} />
                           {stop.kind === "stop" ? stop.label : k.label}
                         </span>
                         <Link
@@ -181,20 +181,18 @@ export function RiderRoutePage() {
 
           {data.needsLocation ? (
             <EmptyState
-              icon="📍"
               title="Share your location"
               description="With no active deliveries yet, we need to know where you are to find orders near you."
             />
           ) : nearby.length === 0 ? (
             <EmptyState
-              icon="🛵"
               title="Nothing open on your route right now"
               description="New orders that fit will appear here as customers book."
             />
           ) : (
             <ul className="space-y-3">
               {nearby.map(({ job, extraKm, mode }) => (
-                <li key={job.id} className="rounded-xl border border-line p-4">
+                <li key={job.id} className="rounded-sm border border-line p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-mono text-sm font-bold">{job.bookingReference}</p>
@@ -202,7 +200,7 @@ export function RiderRoutePage() {
                         {formatDate(job.scheduledDate)} · {job.scheduledTime} · {job.vehicle.name}
                       </p>
                     </div>
-                    <span className="rounded-full bg-[var(--color-success-soft)] px-2.5 py-1 text-xs font-bold text-[var(--color-success)]">
+                    <span className="rounded-sm bg-[var(--color-success-soft)] px-2.5 py-1 text-xs font-bold text-[var(--color-success)]">
                       {mode === "near_you" ? `${extraKm} km from you` : `+${extraKm} km to your route`}
                     </span>
                   </div>

@@ -64,7 +64,7 @@ export function AddressActions({ loc, className }: { loc: LocationDTO | null | u
   }
 
   const btn =
-    "inline-flex items-center rounded-full border border-line-strong px-3 py-1 text-xs font-semibold text-ink-soft transition hover:border-ink hover:text-ink";
+    "inline-flex items-center rounded-sm border border-line-strong px-3 py-1 text-xs font-semibold text-ink-soft transition hover:border-ink hover:text-ink";
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>
       <a href={mapsHref(loc)} target="_blank" rel="noreferrer" className={btn}>

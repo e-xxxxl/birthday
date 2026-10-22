@@ -61,7 +61,6 @@ export function AdminBookingDetailPage() {
   if (error || !data) {
     return (
       <EmptyState
-        icon="🔍"
         title="Booking not found"
         description={error ?? "We couldn't find that booking."}
         action={
@@ -210,7 +209,7 @@ export function AdminBookingDetailPage() {
                   payments.map((p) => (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between rounded-lg bg-surface px-3 py-2"
+                      className="flex items-center justify-between rounded-sm bg-surface px-3 py-2"
                     >
                       <div>
                         <p className="font-mono font-semibold text-ink">{p.reference}</p>

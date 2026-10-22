@@ -16,7 +16,7 @@ export function RiderJobCard({ booking }: { booking: RiderJobDTO }) {
   return (
     <Link
       href={`/rider/jobs/${booking.bookingReference}`}
-      className="block rounded-2xl border border-line bg-paper p-5 shadow-card transition hover:-translate-y-0.5 hover:border-ink"
+      className="block rounded-2xl border border-line bg-paper shadow-card p-5 transition hover:-translate-y-0.5 hover:border-ink"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -37,7 +37,7 @@ export function RiderJobCard({ booking }: { booking: RiderJobDTO }) {
           const l = lineFor(loc);
           return (
             <div key={i} className="flex items-start gap-2">
-              <span className={`mt-1.5 size-2 shrink-0 rounded-full ${dot}`} />
+              <span className={`mt-1.5 size-2 shrink-0 rounded-sm ${dot}`} />
               <div className="min-w-0">
                 <p className="truncate font-semibold text-ink">{l.primary}</p>
                 {l.secondary ? <p className="truncate text-xs text-muted">{l.secondary}</p> : null}

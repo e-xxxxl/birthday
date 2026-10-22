@@ -26,13 +26,13 @@ export function ProgressSteps({
               disabled={!reachable || !onJump}
               onClick={() => reachable && onJump?.(step.key)}
               className={cn(
-                "flex items-center gap-2 rounded-full px-1.5 py-1 text-left transition",
+                "flex items-center gap-2 rounded-sm px-1.5 py-1 text-left transition",
                 reachable && onJump ? "cursor-pointer hover:bg-surface" : "cursor-default",
               )}
             >
               <span
                 className={cn(
-                  "grid size-7 shrink-0 place-items-center rounded-full border text-xs font-bold transition",
+                  "grid size-7 shrink-0 place-items-center rounded-sm border text-xs font-bold transition",
                   isCurrent && "border-ink bg-ink text-paper",
                   isDone && "border-[var(--color-success)] bg-[var(--color-success)] text-paper",
                   !isCurrent && !isDone && "border-line-strong bg-paper text-muted",

@@ -34,7 +34,7 @@ export function QRCodeDisplay({
   if (!svg) {
     return (
       <div
-        className={cn("grid place-items-center rounded-xl bg-surface-2 text-xs text-muted", className)}
+        className={cn("grid place-items-center rounded-sm bg-surface-2 text-xs text-muted", className)}
         style={{ width: size, height: size }}
       >
         Loading QR…
@@ -44,7 +44,7 @@ export function QRCodeDisplay({
 
   return (
     <div
-      className={cn("overflow-hidden rounded-xl border border-line bg-paper p-2", className)}
+      className={cn("overflow-hidden rounded-2xl border border-line bg-paper shadow-card p-2", className)}
       style={{ width: size + 16, height: size + 16 }}
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: svg }}

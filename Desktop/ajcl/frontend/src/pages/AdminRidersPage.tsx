@@ -92,7 +92,7 @@ export function AdminRidersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Riders</h1>
+        <h1 className="text-3xl font-bold sm:text-4xl">Riders</h1>
         <p className="mt-1 text-sm text-muted">
           Rider accounts that can sign in at <code>/rider/login</code>, see their assigned deliveries,
           and confirm pickup/delivery with handover codes.
@@ -173,7 +173,7 @@ export function AdminRidersPage() {
                     <p className="flex flex-wrap items-center gap-2 font-semibold">
                       {r.fullName}
                       {r.active ? null : (
-                        <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
+                        <span className="rounded-sm bg-surface-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
                           Deactivated
                         </span>
                       )}

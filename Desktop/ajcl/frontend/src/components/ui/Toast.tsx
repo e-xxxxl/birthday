@@ -72,7 +72,7 @@ function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
     <div
       role="status"
       className={cn(
-        "pointer-events-auto w-full max-w-sm animate-fade-in-up overflow-hidden rounded-xl border bg-paper shadow-pop",
+        "pointer-events-auto w-full max-w-sm animate-fade-in-up overflow-hidden rounded-sm border bg-paper shadow-pop",
         toast.tone === "success" && "border-l-4 border-l-[var(--color-success)]",
         toast.tone === "error" && "border-l-4 border-l-[var(--color-danger)]",
         toast.tone === "info" && "border-l-4 border-l-[var(--color-info)]",
@@ -82,7 +82,7 @@ function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         <span
           aria-hidden
           className={cn(
-            "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full text-xs font-bold text-paper",
+            "mt-0.5 grid size-5 shrink-0 place-items-center rounded-sm text-xs font-bold text-paper",
             toast.tone === "success" && "bg-[var(--color-success)]",
             toast.tone === "error" && "bg-[var(--color-danger)]",
             toast.tone === "info" && "bg-[var(--color-info)]",

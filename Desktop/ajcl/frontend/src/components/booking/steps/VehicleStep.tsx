@@ -137,7 +137,7 @@ export function VehicleStep({ goNext, goBack, config }: WizardStepProps) {
 
             <div className="mt-4 space-y-3">
               {loading && !quote
-                ? [0, 1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)
+                ? [0, 1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-sm" />)
                 : quote?.vehicles.map(({ vehicle, price, unitsAvailable, soldOut }) => {
                     const active = draft.vehicleSlug === vehicle.slug;
                     const lowStock =
@@ -149,7 +149,7 @@ export function VehicleStep({ goNext, goBack, config }: WizardStepProps) {
                         disabled={soldOut}
                         onClick={() => !soldOut && update({ vehicleSlug: vehicle.slug })}
                         className={cn(
-                          "flex w-full gap-4 rounded-xl border p-4 text-left transition",
+                          "flex w-full gap-4 rounded-sm border p-4 text-left transition",
                           soldOut
                             ? "cursor-not-allowed border-line bg-surface/60 opacity-60"
                             : active
@@ -159,7 +159,7 @@ export function VehicleStep({ goNext, goBack, config }: WizardStepProps) {
                       >
                         <div
                           className={cn(
-                            "shrink-0 overflow-hidden rounded-xl border",
+                            "shrink-0 overflow-hidden rounded-sm border",
                             active ? "border-ink bg-surface" : "border-line bg-surface",
                           )}
                         >
@@ -175,16 +175,16 @@ export function VehicleStep({ goNext, goBack, config }: WizardStepProps) {
                             <p className="flex items-center gap-2 font-bold">
                               {vehicle.name}
                               {soldOut ? (
-                                <span className="rounded-full bg-[var(--color-danger-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-danger)]">
+                                <span className="rounded-sm bg-[var(--color-danger-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-danger)]">
                                   Fully booked
                                 </span>
                               ) : lowStock ? (
-                                <span className="rounded-full bg-[var(--color-warning-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-warning)]">
+                                <span className="rounded-sm bg-[var(--color-warning-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-warning)]">
                                   {unitsAvailable} left
                                 </span>
                               ) : null}
                             </p>
-                            <p className="text-lg font-bold tabular-nums">
+                            <p className="text-lg font-bold font-mono tabular-nums">
                               {formatNaira(price.total)}
                             </p>
                           </div>
@@ -241,11 +241,11 @@ export function VehicleStep({ goNext, goBack, config }: WizardStepProps) {
           <Card>
             <CardBody className="grid grid-cols-2 gap-4 text-center">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted">Distance</p>
+                <p className="rule-label">Distance</p>
                 <p className="mt-1 text-lg font-bold">{formatKm(quote.distanceKm)}</p>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted">Est. time</p>
+                <p className="rule-label">Est. time</p>
                 <p className="mt-1 text-lg font-bold">
                   {formatDuration(
                     selected?.price.estimatedDurationSeconds ?? quote.estimatedDurationSeconds,

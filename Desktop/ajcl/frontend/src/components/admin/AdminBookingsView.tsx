@@ -96,7 +96,7 @@ export function AdminBookingsView({ initialStatus }: { initialStatus: string }) 
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Bookings</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">Bookings</h1>
           {pagination ? (
             <p className="mt-1 text-sm text-muted">{pagination.total} matching</p>
           ) : null}
@@ -113,7 +113,7 @@ export function AdminBookingsView({ initialStatus }: { initialStatus: string }) 
         ) : null}
       </div>
 
-      <div className="grid gap-3 rounded-2xl border border-line bg-paper p-4 shadow-card sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 rounded-2xl border border-line bg-paper shadow-card p-4 sm:grid-cols-2 lg:grid-cols-5">
         <Input
           label="Search"
           placeholder="Reference, name, email, phone"
@@ -157,7 +157,7 @@ export function AdminBookingsView({ initialStatus }: { initialStatus: string }) 
       ) : bookings.length === 0 ? (
         <EmptyState title="No bookings match these filters" />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-line bg-paper">
+        <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-card">
           <div className="overflow-x-auto">
             <table className="hidden w-full text-sm md:table">
               <thead className="border-b border-line bg-surface text-left text-xs uppercase tracking-wide text-muted">

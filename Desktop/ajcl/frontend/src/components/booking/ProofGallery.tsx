@@ -43,7 +43,7 @@ function ProofImage({
       </div>
     );
   }
-  if (!url) return <div className={cn("animate-pulse bg-surface-2", className)} />;
+  if (!url) return <div className={cn("border border-line bg-surface-2", className)} />;
   return <img src={url} alt={alt} className={cn("object-cover", className)} />;
 }
 
@@ -101,7 +101,7 @@ export function ProofGallery({
                     <button
                       type="button"
                       onClick={() => setOpen({ path: pathFor(id), label: `${label} photo ${i + 1}` })}
-                      className="block w-full overflow-hidden rounded-xl border border-line transition hover:border-ink"
+                      className="block w-full overflow-hidden rounded-sm border border-line transition hover:border-ink"
                       aria-label={`View ${label.toLowerCase()} photo ${i + 1}`}
                     >
                       <ProofImage
@@ -117,20 +117,20 @@ export function ProofGallery({
               {showLocation && loc ? (
                 <div
                   className={cn(
-                    "rounded-xl border p-3 text-sm",
+                    "rounded-sm border p-3 text-sm",
                     loc.flagged
                       ? "border-[var(--color-warning)]/40 bg-[var(--color-warning-soft)]"
                       : "border-line bg-surface",
                   )}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs font-bold uppercase tracking-wide text-muted">Rider&apos;s position</p>
+                    <p className="rule-label">Rider&apos;s position</p>
                     {loc.flagged ? (
-                      <span className="rounded-full bg-[var(--color-warning)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-paper">
+                      <span className="rounded-sm bg-[var(--color-warning)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-paper">
                         Check location
                       </span>
                     ) : loc.distanceFromTargetM !== undefined ? (
-                      <span className="rounded-full bg-[var(--color-success-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-success)]">
+                      <span className="rounded-sm bg-[var(--color-success-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-success)]">
                         At the address
                       </span>
                     ) : null}
@@ -160,7 +160,7 @@ export function ProofGallery({
       </CardBody>
 
       <Modal open={open !== null} onClose={() => setOpen(null)} title={open?.label} size="lg">
-        {open ? <ProofImage path={open.path} alt={open.label} className="max-h-[65vh] w-full rounded-lg object-contain" /> : null}
+        {open ? <ProofImage path={open.path} alt={open.label} className="max-h-[65vh] w-full rounded-sm object-contain" /> : null}
       </Modal>
     </Card>
   );

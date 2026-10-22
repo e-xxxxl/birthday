@@ -66,7 +66,7 @@ export function RiderProfilePage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Profile</h1>
+        <h1 className="text-3xl font-bold sm:text-4xl">Profile</h1>
         <p className="mt-1 text-sm text-muted">Your rider account details.</p>
       </div>
 
@@ -74,19 +74,19 @@ export function RiderProfilePage() {
         <CardHeader title="Account" />
         <CardBody className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-muted">Name</p>
+            <p className="rule-label">Name</p>
             <p className="mt-0.5 font-semibold">{user.fullName}</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-muted">Email</p>
+            <p className="rule-label">Email</p>
             <p className="mt-0.5 font-semibold">{user.email}</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-muted">Vehicle</p>
+            <p className="rule-label">Vehicle</p>
             <p className="mt-0.5 font-semibold">{user.rider?.vehicleType || "—"}</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-muted">Plate number</p>
+            <p className="rule-label">Plate number</p>
             <p className="mt-0.5 font-mono font-semibold tracking-wide">{user.rider?.plate || "—"}</p>
           </div>
         </CardBody>

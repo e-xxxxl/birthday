@@ -127,7 +127,7 @@ export function AdminRiderPanel({
         {error ? <Alert tone="danger">{error}</Alert> : null}
 
         {booking.assignedRiderId ? (
-          <div className="rounded-xl bg-surface p-3 text-sm">
+          <div className="rounded-sm bg-surface p-3 text-sm">
             <p className="font-bold">{currentRider?.fullName ?? d?.name ?? "Rider assigned"}</p>
             <p className="text-muted">
               {d?.phone ?? currentRider?.phone} {d?.plate ? `· ${d.plate}` : ""}
@@ -228,7 +228,7 @@ export function AdminRiderPanel({
 function Field({ label, value, mono }: { label: string; value?: string; mono?: boolean }) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-wide text-muted">{label}</p>
+      <p className="rule-label">{label}</p>
       <p className={"mt-0.5 font-semibold" + (mono ? " font-mono tracking-wide" : "")}>
         {value || "—"}
       </p>

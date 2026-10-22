@@ -19,7 +19,7 @@ export function AdminBookingRow({ booking, card = false }: { booking: BookingDTO
         </p>
         <div className="mt-2 flex items-center justify-between">
           <PaymentBadge status={booking.payment.status} />
-          <span className="text-sm font-bold tabular-nums">{formatNaira(booking.pricing.total)}</span>
+          <span className="text-sm font-bold font-mono tabular-nums">{formatNaira(booking.pricing.total)}</span>
         </div>
       </Link>
     );
@@ -41,7 +41,7 @@ export function AdminBookingRow({ booking, card = false }: { booking: BookingDTO
         <p className="truncate text-xs text-ink-soft">{booking.pickup.formattedAddress}</p>
         <p className="truncate text-xs text-muted">→ {booking.destination.formattedAddress}</p>
       </td>
-      <td className="px-4 py-3 font-semibold tabular-nums">{formatNaira(booking.pricing.total)}</td>
+      <td className="px-4 py-3 font-semibold font-mono tabular-nums">{formatNaira(booking.pricing.total)}</td>
       <td className="px-4 py-3">
         <PaymentBadge status={booking.payment.status} />
       </td>

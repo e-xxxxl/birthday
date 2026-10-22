@@ -154,13 +154,13 @@ export function AddressAutocomplete({
 
   return (
     <div ref={boxRef} className="relative">
-      <label className="text-xs font-semibold uppercase tracking-wide text-muted">
+      <label className="rule-label">
         {label}
         {required ? <span className="ml-0.5 text-[var(--color-danger)]">*</span> : null}
       </label>
 
       <div className="field-shell mt-1.5" data-invalid={Boolean(error)}>
-        <span className={cn("size-2.5 shrink-0 rounded-full", dotColor)} />
+        <span className={cn("size-2.5 shrink-0 rounded-sm", dotColor)} />
         <input
           type="text"
           role="combobox"
@@ -189,7 +189,7 @@ export function AddressAutocomplete({
           }}
         />
         {loading ? (
-          <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-ink border-r-transparent" />
+          <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-muted">searching</span>
         ) : value && !value.manual ? (
           <span className="shrink-0 text-xs font-bold text-[var(--color-success)]">✓</span>
         ) : value?.manual ? (
@@ -205,7 +205,7 @@ export function AddressAutocomplete({
         <div
           id={listId}
           role="listbox"
-          className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-line bg-paper shadow-pop"
+          className="absolute z-30 mt-1 w-full overflow-hidden rounded-2xl border border-line bg-paper shadow-card shadow-pop"
         >
           {predictions.length > 0 ? (
             predictions.map((p, i) => (

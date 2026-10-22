@@ -31,7 +31,7 @@ export function RiderJobsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Welcome back, {user?.firstName} 👋</h1>
+        <h1 className="text-3xl font-bold sm:text-4xl">Welcome back, {user?.firstName}</h1>
         <p className="mt-1 text-sm text-muted">Here are the deliveries assigned to you.</p>
       </div>
 
@@ -45,19 +45,19 @@ export function RiderJobsPage() {
       ) : null}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <div className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card sm:p-5">
+        <div className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:p-5">
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">
             Active deliveries
           </p>
-          <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums sm:mt-2 sm:text-2xl">
+          <p className="mt-1.5 text-xl font-bold leading-tight font-mono tabular-nums sm:mt-2 sm:text-2xl">
             {active.length}
           </p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card sm:p-5">
+        <div className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:p-5">
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">
             Completed
           </p>
-          <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums sm:mt-2 sm:text-2xl">
+          <p className="mt-1.5 text-xl font-bold leading-tight font-mono tabular-nums sm:mt-2 sm:text-2xl">
             {completed.length}
           </p>
         </div>
@@ -79,7 +79,7 @@ export function RiderJobsPage() {
                 )}
               >
                 {t.label}
-                <span className="ml-1.5 rounded-full bg-surface-2 px-1.5 text-xs">
+                <span className="ml-1.5 rounded-sm bg-surface-2 px-1.5 text-xs">
                   {t.key === "active" ? active.length : completed.length}
                 </span>
               </button>
@@ -89,7 +89,6 @@ export function RiderJobsPage() {
           <div className="mt-5">
             {list.length === 0 ? (
               <EmptyState
-                icon="🛵"
                 title={tab === "active" ? "No deliveries assigned yet" : "No completed deliveries yet"}
                 description={
                   tab === "active"

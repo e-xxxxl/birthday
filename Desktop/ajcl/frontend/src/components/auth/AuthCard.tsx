@@ -13,11 +13,11 @@ export function AuthCard({
   footer?: ReactNode;
 }) {
   return (
-    <Card className="p-6 sm:p-8">
-      <h1 className="text-2xl font-bold">{title}</h1>
-      {subtitle ? <p className="mt-1.5 text-sm text-muted">{subtitle}</p> : null}
-      <div className="mt-6">{children}</div>
-      {footer ? <div className="mt-6 border-t border-line pt-5 text-center text-sm">{footer}</div> : null}
+    <Card className="rounded-[2rem] border-0 p-7 sm:p-10">
+      <h1 className="text-3xl font-bold sm:text-4xl">{title}</h1>
+      {subtitle ? <p className="mt-2 text-sm leading-relaxed text-muted">{subtitle}</p> : null}
+      <div className="mt-7">{children}</div>
+      {footer ? <div className="mt-7 border-t border-line pt-5 text-center text-sm">{footer}</div> : null}
     </Card>
   );
 }

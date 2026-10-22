@@ -49,7 +49,7 @@ export function PartnerStatementPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Account statement</h1>
+        <h1 className="text-3xl font-bold sm:text-4xl">Account statement</h1>
         <p className="mt-1 text-sm text-muted">
           {user?.partner?.company ? `${user.partner.company} · ` : ""}Your orders are billed to this account and
           settled with our team. Nothing is paid in the app.
@@ -58,11 +58,11 @@ export function PartnerStatementPage() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         {cards.map((c) => (
-          <div key={c.label} className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card sm:p-5">
+          <div key={c.label} className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:p-5">
             <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">{c.label}</p>
             <p
               className={cn(
-                "mt-1.5 text-2xl font-bold leading-tight tabular-nums [overflow-wrap:anywhere] sm:mt-2",
+                "mt-1.5 text-2xl font-bold leading-tight font-mono tabular-nums [overflow-wrap:anywhere] sm:mt-2",
                 c.tone === "owing" && "text-[var(--color-warning)]",
                 c.tone === "clear" && "text-[var(--color-success)]",
               )}
@@ -104,7 +104,7 @@ export function PartnerStatementPage() {
                   <div className="flex shrink-0 items-center gap-3">
                     <StatusBadge status={o.status} />
                     <div className="text-right">
-                      <p className="text-sm font-bold tabular-nums">{formatNaira(o.total)}</p>
+                      <p className="text-sm font-bold font-mono tabular-nums">{formatNaira(o.total)}</p>
                       <p
                         className={cn(
                           "text-xs font-semibold",
@@ -139,7 +139,7 @@ export function PartnerStatementPage() {
                     </p>
                     {p.note ? <p className="text-xs text-ink-soft">{p.note}</p> : null}
                   </div>
-                  <p className="font-bold tabular-nums text-[var(--color-success)]">{formatNaira(p.amount)}</p>
+                  <p className="font-bold font-mono tabular-nums text-[var(--color-success)]">{formatNaira(p.amount)}</p>
                 </li>
               ))}
             </ul>

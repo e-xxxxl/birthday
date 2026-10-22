@@ -1,50 +1,58 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────
-   AJ Courier Logistics — design tokens
-   Reference language: Quicksand type, near-black + paper white,
-   pill buttons, generous whitespace, one warm accent (amber).
+   AJ Courier & Logistics: design tokens
+
+   The palette is taken from the logo: the deep navy of the lettering
+   and the lower swoosh, the orange swoosh, and the sky blue of the
+   cheetah. Navy carries the structure, orange is the call to action,
+   sky blue is the supporting colour. One typeface throughout: Quicksand.
    ───────────────────────────────────────────────────────────── */
 
 @theme {
-  /* Quicksand is loaded via <link> in the root layout (see the reference site),
-     so the build never needs network access. This stack degrades cleanly if
-     Google Fonts is unreachable at runtime. */
   --font-quicksand: "Quicksand", ui-rounded, "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-sans: var(--font-quicksand);
+  --font-display: var(--font-quicksand);
+  /* Figures keep the same face; tabular digits are switched on where numbers line up. */
+  --font-mono: var(--font-quicksand);
 
-  /* Ink / paper */
-  --color-ink: #141414;
-  --color-ink-soft: #3d3d3d;
-  --color-muted: #6b6b6b;
-  --color-line: #e6e6e6;
-  --color-line-strong: #d4d4d4;
+  /* Navy ("ink") and neutrals */
+  --color-ink: #0b2a4a;
+  --color-ink-soft: #34506f;
+  --color-muted: #5c7089;
+  --color-line: #dce6f0;
+  --color-line-strong: #c2d2e3;
   --color-paper: #ffffff;
-  --color-surface: #f7f7f5;
-  --color-surface-2: #f0efec;
+  --color-surface: #f2f7fb;
+  --color-surface-2: #e5eef6;
+  --color-navy: #0b2a4a;
+  --color-navy-deep: #071d36;
 
-  /* Brand accent — amber */
-  --color-accent: #ffb100;
-  --color-accent-dark: #e09a00;
-  --color-accent-soft: #fff4d6;
+  /* Orange: the call to action */
+  --color-accent: #f58a2e;
+  --color-accent-dark: #d9731a;
+  --color-accent-soft: #fdebd9;
 
-  /* Secondary — ink navy for depth */
-  --color-navy: #16233a;
+  /* Sky blue: the cheetah */
+  --color-sky: #4ab9cf;
+  --color-sky-soft: #e3f5f9;
 
   /* Status */
   --color-success: #15803d;
   --color-success-soft: #dcfce7;
-  --color-warning: #b45309;
-  --color-warning-soft: #fef3c7;
+  --color-warning: #a14a0c;
+  --color-warning-soft: #fef0d9;
   --color-danger: #b91c1c;
   --color-danger-soft: #fee2e2;
-  --color-info: #1d4ed8;
-  --color-info-soft: #dbeafe;
+  --color-info: #1d6fb8;
+  --color-info-soft: #dbeefb;
 
+  --radius-sm: 0.625rem;
+  --radius-md: 0.75rem;
   --radius-pill: 999px;
 
-  --shadow-card: 0 1px 2px rgba(20, 20, 20, 0.04), 0 8px 24px -12px rgba(20, 20, 20, 0.12);
-  --shadow-pop: 0 12px 40px -12px rgba(20, 20, 20, 0.22);
+  --shadow-card: 0 1px 2px rgba(11, 42, 74, 0.05), 0 14px 34px -16px rgba(11, 42, 74, 0.2);
+  --shadow-pop: 0 24px 56px -20px rgba(11, 42, 74, 0.4);
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -57,11 +65,12 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
-    /* keep anchored sections clear of the sticky header */
-    scroll-padding-top: 4.5rem;
+    scroll-padding-top: 6rem;
   }
 
   body {
+    /* Elements that slide in from the side must not widen the page. `clip` keeps sticky positioning working. */
+    overflow-x: clip;
     background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
@@ -75,25 +84,27 @@
   h3,
   h4 {
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.015em;
+    line-height: 1.12;
     color: var(--color-ink);
     text-wrap: balance;
   }
 
   ::selection {
     background: var(--color-accent);
-    color: var(--color-ink);
+    color: #fff;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-ink);
+    outline: 2px solid var(--color-sky);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
   input,
   select,
-  textarea {
+  textarea,
+  button {
     font-family: inherit;
   }
 }
@@ -101,7 +112,7 @@
 @layer components {
   .container-page {
     width: 100%;
-    max-width: 76rem;
+    max-width: 78rem;
     margin-inline: auto;
     padding-inline: 1.25rem;
   }
@@ -112,13 +123,13 @@
     }
   }
 
-  /* Reusable field shell used by inputs / autocomplete */
+  /* Reusable field shell used by inputs / selects / autocomplete */
   .field-shell {
     display: flex;
     width: 100%;
     align-items: center;
     gap: 0.5rem;
-    border: 1px solid var(--color-line-strong);
+    border: 1.5px solid var(--color-line-strong);
     background: var(--color-paper);
     border-radius: 0.75rem;
     padding: 0.75rem 0.9rem;
@@ -126,14 +137,64 @@
     transition: border-color 0.15s var(--ease-out-soft), box-shadow 0.15s var(--ease-out-soft);
   }
   .field-shell:focus-within {
-    border-color: var(--color-ink);
-    box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.08);
+    border-color: var(--color-sky);
+    box-shadow: 0 0 0 4px var(--color-sky-soft);
   }
   .field-shell[data-invalid="true"] {
     border-color: var(--color-danger);
   }
   .field-shell[data-invalid="true"]:focus-within {
-    box-shadow: 0 0 0 3px var(--color-danger-soft);
+    box-shadow: 0 0 0 4px var(--color-danger-soft);
+  }
+
+  /* Small label above a field or a figure */
+  .rule-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--color-ink-soft);
+  }
+
+  .figure {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Scroll reveal ───────────────────────────────────────────
+     Elements fade and slide in once, the first time they scroll into view. */
+  .reveal {
+    opacity: 0;
+    transition:
+      opacity 0.8s var(--ease-out-soft),
+      transform 0.8s var(--ease-out-soft);
+    will-change: opacity, transform;
+  }
+  .reveal[data-v="up"] {
+    transform: translateY(32px);
+  }
+  .reveal[data-v="left"] {
+    transform: translateX(-48px);
+  }
+  .reveal[data-v="right"] {
+    transform: translateX(48px);
+  }
+  .reveal[data-v="zoom"] {
+    transform: scale(0.94);
+  }
+  .reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* An image that settles from slightly enlarged as its frame scrolls in. */
+  .reveal-img {
+    overflow: hidden;
+  }
+  .reveal-img > img {
+    transform: scale(1.14);
+    transition: transform 1.4s var(--ease-out-soft);
+  }
+  .reveal-img.is-in > img {
+    transform: scale(1);
   }
 }
 
@@ -180,5 +241,10 @@
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+  .reveal,
+  .reveal-img > img {
+    opacity: 1;
+    transform: none;
   }
 }

@@ -47,7 +47,7 @@ export function QuantityField({
   }, [n]);
 
   const btn =
-    "grid size-8 shrink-0 place-items-center rounded-lg border border-line-strong text-xl leading-none text-ink-soft transition hover:border-ink hover:text-ink disabled:opacity-40";
+    "grid size-8 shrink-0 place-items-center rounded-sm border border-line-strong text-xl leading-none text-ink-soft transition hover:border-ink hover:text-ink disabled:opacity-40";
 
   return (
     <FieldWrapper

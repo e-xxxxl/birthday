@@ -21,14 +21,23 @@ export function AccountMenu() {
   const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase() || "U";
 
   const links =
-    user.role === "admin"
+    user.role === "office_admin"
+      ? [{ label: "Shipments desk", href: "/admin/shipments" }]
+      : user.role === "admin"
       ? [
           { label: "Admin dashboard", href: "/admin" },
           { label: "Bookings", href: "/admin/bookings" },
           { label: "Vehicles & pricing", href: "/admin/vehicles" },
           { label: "Riders", href: "/admin/riders" },
           { label: "Partners", href: "/admin/partners" },
-          ...(user.superAdmin ? [{ label: "Team", href: "/admin/team" }] : []),
+          { label: "Shipments", href: "/admin/shipments" },
+          ...(user.superAdmin
+            ? [
+                { label: "Shipping settings", href: "/admin/shipping" },
+                { label: "Website content", href: "/admin/site" },
+                { label: "Team", href: "/admin/team" },
+              ]
+            : []),
         ]
       : user.role === "rider"
         ? [
@@ -39,8 +48,9 @@ export function AccountMenu() {
         : [
             { label: "Dashboard", href: "/dashboard" },
             { label: "My bookings", href: "/dashboard/bookings" },
+            { label: "My shipments", href: "/dashboard/shipments" },
             ...(user.partner ? [{ label: "Account statement", href: "/dashboard/account" }] : []),
-            { label: "Book a delivery", href: "/book" },
+            { label: "New booking", href: "/send" },
           ];
 
   return (
@@ -57,7 +67,7 @@ export function AccountMenu() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-line bg-paper shadow-pop">
+        <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-line bg-paper shadow-card shadow-pop">
           <div className="border-b border-line px-4 py-3">
             <p className="truncate text-sm font-bold">{user.fullName}</p>
             <p className="truncate text-xs text-muted">{user.email}</p>
@@ -68,7 +78,7 @@ export function AccountMenu() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-ink-soft hover:bg-surface hover:text-ink"
+                className="block rounded-sm px-3 py-2 text-sm font-medium text-ink-soft hover:bg-surface hover:text-ink"
               >
                 {item.label}
               </Link>
@@ -79,7 +89,7 @@ export function AccountMenu() {
               type="button"
               onClick={() => logout()}
               className={cn(
-                "block w-full rounded-lg px-3 py-2 text-left text-sm font-semibold",
+                "block w-full rounded-sm px-3 py-2 text-left text-sm font-semibold",
                 "text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)]",
               )}
             >

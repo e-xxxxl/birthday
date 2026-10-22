@@ -104,3 +104,8 @@ export const http = {
     api<T>(path, { ...options, method: "PUT", body }),
   del: <T,>(path: string, options?: Options) => api<T>(path, { ...options, method: "DELETE" }),
 };
+
+/** Absolute URL for an API path (for images, downloads and links that the browser fetches itself). */
+export function apiUrl(path: string): string {
+  return resolveUrl(path);
+}

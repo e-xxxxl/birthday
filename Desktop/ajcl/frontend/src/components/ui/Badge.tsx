@@ -6,7 +6,7 @@ type Tone = "neutral" | "info" | "progress" | "success" | "danger" | "warning";
 const toneClasses: Record<Tone, string> = {
   neutral: "bg-surface-2 text-ink-soft",
   info: "bg-[var(--color-info-soft)] text-[var(--color-info)]",
-  progress: "bg-[var(--color-accent-soft)] text-[var(--color-accent-dark)]",
+  progress: "bg-accent-soft text-accent-dark",
   success: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
   danger: "bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
   warning: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
@@ -24,7 +24,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold",
+        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold",
         toneClasses[tone],
         className,
       )}

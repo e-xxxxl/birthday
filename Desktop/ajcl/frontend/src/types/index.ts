@@ -9,7 +9,7 @@ export type SessionUser = {
   fullName: string;
   email: string;
   phone: string;
-  role: "customer" | "admin" | "rider";
+  role: "customer" | "admin" | "rider" | "office_admin";
   /** Present for partner accounts: orders are billed to the account instead of paid in the app. */
   partner?: { active: true; company?: string };
   /** Elevated admin — can create admins and delete bookings. */
@@ -26,6 +26,7 @@ export type AdminAccount = {
   email: string;
   phone: string;
   superAdmin: boolean;
+  role?: "admin" | "office_admin";
   lastLoginAt: string | null;
   createdAt: string | null;
 };

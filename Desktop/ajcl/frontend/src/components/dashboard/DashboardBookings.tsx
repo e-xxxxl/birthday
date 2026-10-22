@@ -42,7 +42,7 @@ export function DashboardBookings({ buckets }: { buckets: Buckets }) {
             )}
           >
             {t.label}
-            <span className="ml-1.5 rounded-full bg-surface-2 px-1.5 text-xs">
+            <span className="ml-1.5 rounded-sm bg-surface-2 px-1.5 text-xs">
               {buckets[t.key].length}
             </span>
           </button>

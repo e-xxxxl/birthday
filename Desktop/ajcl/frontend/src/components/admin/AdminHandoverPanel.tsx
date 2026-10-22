@@ -67,8 +67,8 @@ function Row({
   resetting: boolean;
 }) {
   return (
-    <div className="rounded-xl bg-surface p-3 text-sm">
-      <p className="text-xs font-bold uppercase tracking-wide text-muted">{label}</p>
+    <div className="rounded-sm bg-surface p-3 text-sm">
+      <p className="rule-label">{label}</p>
       {usedAt ? (
         <p className="mt-1 font-semibold text-[var(--color-success)]">
           ✓ Verified {formatDateTime(usedAt)}

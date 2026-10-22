@@ -68,7 +68,7 @@ export function ContactButton() {
             const inner = (
               <>
                 <span className="text-sm font-semibold">{a.label}</span>
-                <span className="grid size-8 place-items-center rounded-full bg-navy text-paper">
+                <span className="grid size-8 place-items-center rounded-sm bg-navy text-paper">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                     {a.icon}
                   </svg>
@@ -76,7 +76,7 @@ export function ContactButton() {
               </>
             );
             const cls =
-              "flex items-center gap-2.5 rounded-full border border-line bg-paper py-1.5 pl-4 pr-1.5 shadow-pop transition hover:border-navy animate-fade-in-up";
+              "flex items-center gap-2.5 rounded-sm border border-line bg-paper py-1.5 pl-4 pr-1.5 shadow-pop transition hover:border-navy animate-fade-in-up";
             return a.external ? (
               <a
                 key={a.label}
@@ -103,7 +103,7 @@ export function ContactButton() {
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "grid size-14 place-items-center rounded-full bg-navy text-paper shadow-pop transition hover:brightness-110 active:scale-95",
+          "grid size-14 place-items-center rounded-sm bg-navy text-paper shadow-pop transition hover:brightness-110 active:scale-95",
           open && "rotate-45",
         )}
       >

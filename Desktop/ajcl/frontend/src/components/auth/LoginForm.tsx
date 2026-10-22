@@ -11,6 +11,7 @@ import { Alert } from "@/components/ui/Feedback";
 import { formErrorsFrom } from "@/components/auth/AuthCard";
 import { loginSchema } from "@/lib/validation/auth";
 import { HttpError } from "@/lib/http";
+import { isStaff, homeFor } from "@/lib/roles";
 
 export function LoginForm() {
   const { login } = useAuth();
@@ -39,7 +40,7 @@ export function LoginForm() {
     try {
       const user = await login(parsed.data);
       toast.success("Logged in", `Welcome back, ${user.firstName}.`);
-      navigate(user.role === "admin" ? "/admin" : next);
+      navigate(isStaff(user.role) ? homeFor(user.role) : next);
     } catch (err) {
       if (err instanceof HttpError) {
         setFormError(err.message);

@@ -121,7 +121,7 @@ export function LocationsStep({ goNext, config }: WizardStepProps) {
                   type="button"
                   onClick={() => removeStop(i)}
                   aria-label={`Remove stop ${i + 1}`}
-                  className="mb-0.5 grid size-11 shrink-0 place-items-center rounded-xl border border-line-strong text-lg text-muted transition hover:border-[var(--color-danger)] hover:text-[var(--color-danger)]"
+                  className="mb-0.5 grid size-11 shrink-0 place-items-center rounded-sm border border-line-strong text-lg text-muted transition hover:border-[var(--color-danger)] hover:text-[var(--color-danger)]"
                 >
                   −
                 </button>
@@ -134,7 +134,7 @@ export function LocationsStep({ goNext, config }: WizardStepProps) {
                 onClick={addStop}
                 className="flex items-center gap-2 text-sm font-semibold text-ink-soft hover:text-ink"
               >
-                <span className="grid size-6 place-items-center rounded-full border border-line-strong text-base">
+                <span className="grid size-6 place-items-center rounded-sm border border-line-strong text-base">
                   +
                 </span>
                 Add {draft.stops.length === 0 ? "a stop" : "another stop"}
@@ -168,7 +168,7 @@ export function LocationsStep({ goNext, config }: WizardStepProps) {
                   type="button"
                   onClick={() => update({ deliveryType: t.value })}
                   className={cn(
-                    "rounded-xl border p-4 text-left transition",
+                    "rounded-sm border p-4 text-left transition",
                     draft.deliveryType === t.value
                       ? "border-ink bg-ink/[0.03] ring-1 ring-ink"
                       : "border-line-strong hover:border-ink",
@@ -177,12 +177,12 @@ export function LocationsStep({ goNext, config }: WizardStepProps) {
                   <span className="flex items-center gap-2 text-sm font-bold">
                     <span
                       className={cn(
-                        "grid size-4 place-items-center rounded-full border",
+                        "grid size-4 place-items-center rounded-sm border",
                         draft.deliveryType === t.value ? "border-ink bg-ink text-paper" : "border-line-strong",
                       )}
                     >
                       {draft.deliveryType === t.value ? (
-                        <span className="size-1.5 rounded-full bg-paper" />
+                        <span className="size-1.5 rounded-sm bg-paper" />
                       ) : null}
                     </span>
                     {t.label}

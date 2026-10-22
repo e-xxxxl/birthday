@@ -29,7 +29,7 @@ export function HandoverCodeCard({
       <Card className="border-[var(--color-success)]/30">
         <CardHeader title={title} description={description} />
         <CardBody className="flex items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--color-success-soft)] text-lg text-[var(--color-success)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-[var(--color-success-soft)] text-lg text-[var(--color-success)]">
             ✓
           </span>
           <div>
@@ -69,7 +69,7 @@ export function HandoverCodeCard({
       <CardHeader title={title} description={description} />
       <CardBody className="space-y-4">
         {locked ? (
-          <div className="rounded-xl border border-[var(--color-danger)]/30 bg-[var(--color-danger-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-danger)]">
+          <div className="rounded-sm border border-[var(--color-danger)]/30 bg-[var(--color-danger-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-danger)]">
             This code was locked after too many incorrect attempts. Contact support to reset it.
           </div>
         ) : null}

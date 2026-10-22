@@ -13,7 +13,7 @@ import { http, HttpError } from "@/lib/http";
 import { formatDateTime } from "@/lib/utils";
 import type { AdminAccount } from "@/types";
 
-const empty = { firstName: "", lastName: "", email: "", phone: "", password: "", superAdmin: false };
+const empty = { firstName: "", lastName: "", email: "", phone: "", password: "", superAdmin: false, role: "admin" as "admin" | "office_admin" };
 
 export function AdminTeamPage() {
   useDocumentTitle("Team");
@@ -68,7 +68,7 @@ export function AdminTeamPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Team</h1>
+        <h1 className="text-3xl font-bold sm:text-4xl">Team</h1>
         <p className="mt-1 text-sm text-muted">
           Admin accounts that can sign in at <code>/admin/login</code>. Only super-admins see this
           page.
@@ -100,7 +100,18 @@ export function AdminTeamPage() {
               onChange={set("password")}
               hint="At least 8 characters, with an uppercase letter and a number. Share it with the admin — they can reset it later."
             />
-            <label className="flex items-center gap-2 text-sm">
+            <label className="block rule-label">
+              Role
+              <select
+                className="field-shell mt-1.5 w-full normal-case"
+                value={form.role}
+                onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as "admin" | "office_admin", superAdmin: false }))}
+              >
+                <option value="admin">Admin (everything except super-admin settings)</option>
+                <option value="office_admin">Office Admin (shipments desk only)</option>
+              </select>
+            </label>
+            <label className={`flex items-center gap-2 text-sm ${form.role === "office_admin" ? "hidden" : ""}`}>
               <input
                 type="checkbox"
                 checked={form.superAdmin}
@@ -139,8 +150,13 @@ export function AdminTeamPage() {
                   <div>
                     <p className="font-semibold">
                       {a.fullName}
+                      {a.role === "office_admin" ? (
+                        <span className="ml-2 rounded-sm bg-surface-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-soft">
+                          Office admin
+                        </span>
+                      ) : null}
                       {a.superAdmin ? (
-                        <span className="ml-2 rounded-full bg-[var(--color-accent-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-accent-dark)]">
+                        <span className="ml-2 rounded-sm bg-[var(--color-accent-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-accent-dark)]">
                           Super-admin
                         </span>
                       ) : null}

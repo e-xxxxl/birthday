@@ -60,7 +60,7 @@ export function DashboardPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Welcome back, {user?.firstName} 👋</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">Welcome back, {user?.firstName}</h1>
           <p className="mt-1 text-sm text-muted">Here&apos;s what&apos;s happening with your deliveries.</p>
         </div>
         <Button href="/book">New booking</Button>
@@ -88,12 +88,12 @@ export function DashboardPage() {
         {stats.map((s) => (
           <div
             key={s.label}
-            className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card sm:p-5"
+            className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:p-5"
           >
             <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">
               {s.label}
             </p>
-            <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
+            <p className="mt-1.5 text-xl font-bold leading-tight font-mono tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
               {s.value}
             </p>
           </div>
@@ -119,7 +119,6 @@ export function DashboardPage() {
 
           {bookings.length === 0 ? (
             <EmptyState
-              icon="📦"
               title="No bookings yet"
               description="Book your first delivery and it will show up here with live status tracking."
               action={<Button href="/book">Book a delivery</Button>}

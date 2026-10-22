@@ -66,7 +66,7 @@ export function BookingWizard({
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 flex flex-col gap-3 sm:mb-8">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold sm:text-2xl">Book a delivery</h1>
+            <h1 className="text-3xl font-bold sm:text-4xl">Book a delivery</h1>
             <button
               type="button"
               onClick={() => navigate("/dashboard")}

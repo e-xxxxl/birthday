@@ -36,14 +36,14 @@ export function Modal({
     <div className="fixed inset-0 z-[90] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <button
         aria-label="Close"
-        className="absolute inset-0 bg-ink/40 backdrop-blur-[2px] animate-fade-in"
+        className="absolute inset-0 bg-navy-deep/60 animate-fade-in"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative w-full animate-fade-in-up rounded-t-2xl bg-paper shadow-pop sm:rounded-2xl",
+          "relative w-full animate-fade-in-up rounded-t-3xl bg-paper shadow-pop sm:rounded-3xl",
           size === "sm" && "sm:max-w-sm",
           size === "md" && "sm:max-w-lg",
           size === "lg" && "sm:max-w-2xl",
@@ -51,7 +51,7 @@ export function Modal({
       >
         {(title || description) && (
           <div className="border-b border-line p-5">
-            {title ? <h2 className="text-lg font-bold">{title}</h2> : null}
+            {title ? <h2 className="text-xl font-bold">{title}</h2> : null}
             {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
           </div>
         )}

@@ -24,7 +24,7 @@ export function FieldWrapper({
       {label ? (
         <label
           htmlFor={htmlFor}
-          className="text-xs font-semibold uppercase tracking-wide text-muted"
+          className="rule-label"
         >
           {label}
           {required ? <span className="ml-0.5 text-[var(--color-danger)]">*</span> : null}

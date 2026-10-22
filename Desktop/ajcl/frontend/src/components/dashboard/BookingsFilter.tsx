@@ -19,7 +19,7 @@ export function BookingsFilter({ current }: { current: string }) {
             key={opt}
             href={opt === "all" ? "/dashboard/bookings" : `/dashboard/bookings?status=${opt}`}
             className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold transition",
+              "shrink-0 rounded-sm border px-3 py-1.5 text-sm font-semibold transition",
               active
                 ? "border-ink bg-ink text-paper"
                 : "border-line-strong text-ink-soft hover:border-ink",

@@ -13,7 +13,7 @@ export function RiderLayout() {
           <div className="container-page flex h-16 items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <Logo />
-              <span className="hidden rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-soft sm:block">
+              <span className="hidden rounded-sm bg-surface-2 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-soft sm:block">
                 Rider
               </span>
             </div>

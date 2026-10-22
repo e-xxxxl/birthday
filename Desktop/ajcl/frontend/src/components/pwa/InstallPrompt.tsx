@@ -129,9 +129,9 @@ export function InstallPrompt() {
       className="fixed inset-x-0 bottom-0 z-[95] flex justify-center p-3 sm:p-4"
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
     >
-      <div className="animate-fade-in-up w-full max-w-md overflow-hidden rounded-2xl bg-ink text-paper shadow-pop">
+      <div className="animate-fade-in-up w-full max-w-md overflow-hidden rounded-sm bg-ink text-paper shadow-pop">
         <div className="flex items-start gap-3 p-4">
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-paper p-1.5">
+          <span className="grid size-11 shrink-0 place-items-center rounded-sm bg-paper p-1.5">
             <img src="/logo.png" alt="" className="h-full w-full object-contain" />
           </span>
 
@@ -165,7 +165,7 @@ export function InstallPrompt() {
                   type="button"
                   onClick={install}
                   disabled={busy}
-                  className="inline-flex h-9 items-center rounded-full bg-paper px-4 text-xs font-bold text-ink transition hover:bg-white/90 disabled:opacity-60"
+                  className="inline-flex h-9 items-center rounded-sm bg-paper px-4 text-xs font-bold text-ink transition hover:bg-white/90 disabled:opacity-60"
                 >
                   {busy ? "Opening…" : "Install now"}
                 </button>
@@ -173,7 +173,7 @@ export function InstallPrompt() {
               <button
                 type="button"
                 onClick={() => close(true)}
-                className="inline-flex h-9 items-center rounded-full px-3 text-xs font-semibold text-paper/70 transition hover:text-paper"
+                className="inline-flex h-9 items-center rounded-sm px-3 text-xs font-semibold text-paper/70 transition hover:text-paper"
               >
                 Not now
               </button>

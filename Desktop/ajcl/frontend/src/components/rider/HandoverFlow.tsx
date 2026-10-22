@@ -73,7 +73,7 @@ export function HandoverFlow({
           <li key={s.n} className="flex flex-1 items-center gap-2">
             <span
               className={cn(
-                "grid size-6 shrink-0 place-items-center rounded-full text-[11px] font-bold",
+                "grid size-6 shrink-0 place-items-center rounded-sm text-[11px] font-bold",
                 s.done ? "bg-[var(--color-success)] text-paper" : s.active ? "bg-ink text-paper" : "bg-surface-2 text-muted",
               )}
             >
@@ -185,8 +185,8 @@ function ProofStep({
       {error ? <Alert tone="danger">{error}</Alert> : null}
 
       {/* Location */}
-      <div className="rounded-xl border border-line p-4">
-        <p className="text-xs font-bold uppercase tracking-wide text-muted">Your location</p>
+      <div className="rounded-sm border border-line p-4">
+        <p className="rule-label">Your location</p>
         {geo.state.status === "error" ? (
           <div className="mt-2 space-y-3">
             <p className="text-sm text-[var(--color-danger)]">{geo.state.message}</p>
@@ -204,7 +204,7 @@ function ProofStep({
               <p className="flex items-center gap-2 text-sm font-semibold">
                 <span
                   className={cn(
-                    "size-2.5 rounded-full",
+                    "size-2.5 rounded-sm",
                     fix.accuracyM <= 100 ? "bg-[var(--color-success)]" : "bg-[var(--color-warning)]",
                   )}
                 />
@@ -229,8 +229,8 @@ function ProofStep({
       </div>
 
       {/* Photos */}
-      <div className="rounded-xl border border-line p-4">
-        <p className="text-xs font-bold uppercase tracking-wide text-muted">Proof photo</p>
+      <div className="rounded-sm border border-line p-4">
+        <p className="rule-label">Proof photo</p>
         <p className="mt-1 text-sm text-ink-soft">{copy.photoHint}</p>
 
         <input
@@ -245,13 +245,13 @@ function ProofStep({
         {photos.length > 0 ? (
           <ul className="mt-3 grid grid-cols-2 gap-3">
             {photos.map((src, i) => (
-              <li key={i} className="relative overflow-hidden rounded-xl border border-line bg-surface">
+              <li key={i} className="relative overflow-hidden rounded-sm border border-line bg-surface">
                 <img src={src} alt={`Proof photo ${i + 1}`} className="aspect-[4/3] w-full object-cover" />
                 <button
                   type="button"
                   aria-label={`Remove photo ${i + 1}`}
                   onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
-                  className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-ink/70 text-sm text-paper hover:bg-ink"
+                  className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-sm bg-ink/70 text-sm text-paper hover:bg-ink"
                 >
                   ×
                 </button>

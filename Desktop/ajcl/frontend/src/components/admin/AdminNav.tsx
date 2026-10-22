@@ -9,15 +9,26 @@ const baseItems = [
   { label: "Bookings", href: "/admin/bookings" },
   { label: "Riders", href: "/admin/riders" },
   { label: "Partners", href: "/admin/partners" },
+  { label: "Shipments", href: "/admin/shipments" },
   { label: "Vehicles & Pricing", href: "/admin/vehicles" },
 ];
+
+const officeItems = [{ label: "Shipments", href: "/admin/shipments" }];
 
 export function AdminNav() {
   const pathname = useLocation().pathname;
   const { user } = useAuth();
-  const items = user?.superAdmin
-    ? [...baseItems, { label: "Team", href: "/admin/team" }]
-    : baseItems;
+  const items =
+    user?.role === "office_admin"
+      ? officeItems
+      : user?.superAdmin
+        ? [
+            ...baseItems,
+            { label: "Shipping", href: "/admin/shipping" },
+            { label: "Website", href: "/admin/site" },
+            { label: "Team", href: "/admin/team" },
+          ]
+        : baseItems;
   return (
     <div className="border-t border-paper/10 bg-ink">
       <div className="container-page no-scrollbar flex gap-1 overflow-x-auto">

@@ -1,6 +1,7 @@
 import { AppLink as Link } from "@/components/ui/AppLink";
 import { EmptyState, LoadingBlock, Alert } from "@/components/ui/Feedback";
 import { AdminBookingRow } from "@/components/admin/AdminBookingRow";
+import { ShippingAttention } from "@/components/admin/ShippingSummary";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http } from "@/lib/http";
@@ -47,23 +48,25 @@ export function AdminOverviewPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Overview</h1>
+        <h1 className="text-3xl font-bold sm:text-4xl">Overview</h1>
         <p className="mt-1 text-sm text-muted">
           {stats.recentBookings} new booking{stats.recentBookings === 1 ? "" : "s"} in the last 7 days
         </p>
       </div>
+
+      <ShippingAttention />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {cards.map((c) => (
           <Link
             key={c.label}
             href={c.href}
-            className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card transition hover:border-ink sm:p-5"
+            className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 transition hover:border-ink sm:p-5"
           >
             <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">
               {c.label}
             </p>
-            <p className="mt-1.5 text-2xl font-bold leading-tight tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-3xl">
+            <p className="mt-1.5 text-2xl font-bold leading-tight font-mono tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-3xl">
               {c.value}
             </p>
           </Link>
@@ -71,27 +74,27 @@ export function AdminOverviewPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        <div className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card sm:p-5">
+        <div className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:p-5">
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">
             Total revenue
           </p>
-          <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
+          <p className="mt-1.5 text-xl font-bold leading-tight font-mono tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
             {formatNaira(stats.revenue)}
           </p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card sm:p-5">
+        <div className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:p-5">
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">
             Revenue this month
           </p>
-          <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
+          <p className="mt-1.5 text-xl font-bold leading-tight font-mono tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
             {formatNaira(stats.revenueThisMonth)}
           </p>
         </div>
-        <div className="col-span-2 min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card sm:col-span-1 sm:p-5">
+        <div className="col-span-2 min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:col-span-1 sm:p-5">
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">
             Customers
           </p>
-          <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
+          <p className="mt-1.5 text-xl font-bold leading-tight font-mono tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
             {stats.customers}
           </p>
         </div>
@@ -100,10 +103,10 @@ export function AdminOverviewPage() {
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <Link
           href="/admin/partners"
-          className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card transition hover:border-ink sm:p-5"
+          className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 transition hover:border-ink sm:p-5"
         >
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">Owed by partners</p>
-          <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
+          <p className="mt-1.5 text-xl font-bold leading-tight font-mono tabular-nums [overflow-wrap:anywhere] sm:mt-2 sm:text-2xl">
             {formatNaira(stats.partnerOutstanding ?? 0)}
           </p>
           <p className="mt-1 text-xs text-muted">
@@ -112,10 +115,10 @@ export function AdminOverviewPage() {
         </Link>
         <Link
           href="/admin/bookings?status=returned"
-          className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card transition hover:border-ink sm:p-5"
+          className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 transition hover:border-ink sm:p-5"
         >
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">Returned orders</p>
-          <p className="mt-1.5 text-xl font-bold leading-tight tabular-nums sm:mt-2 sm:text-2xl">
+          <p className="mt-1.5 text-xl font-bold leading-tight font-mono tabular-nums sm:mt-2 sm:text-2xl">
             {stats.returnedBookings ?? 0}
           </p>
         </Link>
@@ -124,7 +127,7 @@ export function AdminOverviewPage() {
       {recentProofs.length > 0 ? (
         <section>
           <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Recent handovers</h2>
-          <ul className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-paper">
+          <ul className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-paper shadow-card">
             {recentProofs.map((p) => (
               <li key={p.id}>
                 <Link
@@ -149,7 +152,7 @@ export function AdminOverviewPage() {
                     </span>
                   </span>
                   {p.location?.flagged ? (
-                    <span className="shrink-0 rounded-full bg-[var(--color-warning)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-paper">
+                    <span className="shrink-0 rounded-sm bg-[var(--color-warning)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-paper">
                       Check location
                     </span>
                   ) : (
@@ -172,7 +175,7 @@ export function AdminOverviewPage() {
         {recent.length === 0 ? (
           <EmptyState className="mt-3" title="No bookings yet" />
         ) : (
-          <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-paper">
+          <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-paper shadow-card">
             <div className="overflow-x-auto">
               <table className="hidden w-full text-sm md:table">
                 <thead className="border-b border-line bg-surface text-left text-xs uppercase tracking-wide text-muted">

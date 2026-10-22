@@ -16,7 +16,7 @@ export function StatusTimeline({ booking }: { booking: BookingDTO }) {
   if (returned) {
     const when = booking.returnedAt ?? stampFor("returned");
     return (
-      <div className="rounded-xl border border-[var(--color-warning)]/40 bg-[var(--color-warning-soft)] p-4">
+      <div className="rounded-sm border border-[var(--color-warning)]/40 bg-[var(--color-warning-soft)] p-4">
         <p className="text-sm font-bold text-[var(--color-warning)]">Order returned</p>
         {when ? <p className="text-xs text-[var(--color-warning)]/80">{formatDateTime(when)}</p> : null}
         <p className="mt-1 text-sm text-ink-soft">
@@ -31,7 +31,7 @@ export function StatusTimeline({ booking }: { booking: BookingDTO }) {
   if (cancelled) {
     const when = stampFor("cancelled");
     return (
-      <div className="rounded-xl border border-[var(--color-danger)]/30 bg-[var(--color-danger-soft)] p-4">
+      <div className="rounded-sm border border-[var(--color-danger)]/30 bg-[var(--color-danger-soft)] p-4">
         <p className="text-sm font-bold text-[var(--color-danger)]">Booking cancelled</p>
         {when ? <p className="text-xs text-[var(--color-danger)]/80">{formatDateTime(when)}</p> : null}
         {booking.statusHistory.find((h) => h.status === "cancelled")?.note ? (
@@ -55,7 +55,7 @@ export function StatusTimeline({ booking }: { booking: BookingDTO }) {
             <div className="flex flex-col items-center">
               <span
                 className={cn(
-                  "grid size-7 shrink-0 place-items-center rounded-full border-2 text-xs font-bold transition",
+                  "grid size-7 shrink-0 place-items-center rounded-sm border-2 text-xs font-bold transition",
                   done && "border-[var(--color-success)] bg-[var(--color-success)] text-paper",
                   active && "border-ink bg-ink text-paper",
                   !done && !active && "border-line-strong bg-paper text-muted",

@@ -27,22 +27,33 @@ async function decode(file: File): Promise<{ source: CanvasImageSource; width: n
   }
 }
 
-export async function photoToJpegDataUrl(file: File): Promise<string> {
+/** A larger, sharper setting for posters and flyers that carry small print. */
+export const POSTER_STEPS: Array<{ edge: number; quality: number }> = [
+  { edge: 1800, quality: 0.86 },
+  { edge: 1600, quality: 0.78 },
+  { edge: 1280, quality: 0.7 },
+];
+
+export async function photoToJpegDataUrl(file: File, opts: { steps?: Array<{ edge: number; quality: number }>; targetBytes?: number } = {}): Promise<string> {
+  const steps = opts.steps ?? STEPS;
+  const target = opts.targetBytes ?? TARGET_BYTES;
   if (!file.type.startsWith("image/")) throw new Error("Choose a photo.");
   const img = await decode(file);
   try {
     let out = "";
-    for (const step of STEPS) {
+    for (const step of steps) {
       const scale = Math.min(1, step.edge / Math.max(img.width, img.height));
       const canvas = document.createElement("canvas");
       canvas.width = Math.max(1, Math.round(img.width * scale));
       canvas.height = Math.max(1, Math.round(img.height * scale));
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Your browser can't process photos.");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img.source, 0, 0, canvas.width, canvas.height);
       out = canvas.toDataURL("image/jpeg", step.quality);
       // base64 is ~4/3 the size of the bytes
-      if ((out.length * 3) / 4 <= TARGET_BYTES) break;
+      if ((out.length * 3) / 4 <= target) break;
     }
     return out;
   } finally {

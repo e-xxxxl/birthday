@@ -6,7 +6,7 @@
  * booking flow reads from this file at runtime except the pricing formula
  * constants below — the numbers here are used once, to seed the DB.
  *
- * ⚠️  The business will provide the real ₦/km rates. Do not treat the seed
+ *  The business will provide the real ₦/km rates. Do not treat the seed
  *     amounts as final prices.
  */
 

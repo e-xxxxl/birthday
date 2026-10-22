@@ -145,7 +145,7 @@ export function RouteMap({
   }, [status, key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-line bg-surface">
+    <div className="relative overflow-hidden rounded-sm border border-line bg-surface">
       <div ref={ref} className="h-64 w-full lg:h-[420px]" />
       {status !== "ready" ? (
         <div className="absolute inset-0 grid place-items-center bg-surface text-center text-sm text-muted">

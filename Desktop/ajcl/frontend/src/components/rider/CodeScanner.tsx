@@ -80,7 +80,7 @@ export function CodeScanner({
         </Button>
       )}
 
-      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-muted">
+      <div className="flex items-center gap-3 rule-label">
         <span className="h-px flex-1 bg-line" />
         or enter the 6-digit code
         <span className="h-px flex-1 bg-line" />
@@ -100,7 +100,7 @@ export function CodeScanner({
             onChange={(e) => setDigit(i, e.target.value)}
             onKeyDown={(e) => onKeyDown(i, e)}
             onFocus={(e) => e.currentTarget.select()}
-            className="size-11 rounded-xl border border-line-strong text-center text-lg font-bold outline-none focus:border-ink focus:ring-2 focus:ring-ink/10 sm:size-12"
+            className="size-11 rounded-sm border border-line-strong text-center text-lg font-bold outline-none focus:border-ink focus:ring-2 focus:ring-ink/10 sm:size-12"
           />
         ))}
       </div>
@@ -172,7 +172,7 @@ function QrScanner({ onDetected, onClose }: { onDetected: (value: string) => voi
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-ink">
+    <div className="overflow-hidden rounded-sm border border-line bg-ink">
       <div className="flex items-center justify-between bg-ink px-4 py-2.5">
         <span className="text-xs font-semibold text-paper/80">
           {status === "running" ? "Point the camera at the QR code" : "Starting camera…"}
@@ -180,7 +180,7 @@ function QrScanner({ onDetected, onClose }: { onDetected: (value: string) => voi
         <button
           type="button"
           onClick={onClose}
-          className="rounded-full bg-paper/10 px-2.5 py-1 text-xs font-semibold text-paper hover:bg-paper/20"
+          className="rounded-sm bg-paper/10 px-2.5 py-1 text-xs font-semibold text-paper hover:bg-paper/20"
         >
           Close
         </button>

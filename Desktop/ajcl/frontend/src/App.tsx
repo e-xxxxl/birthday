@@ -12,6 +12,7 @@ import { BookLayout } from "@/components/layouts/BookLayout";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { AdminLayout } from "@/components/layouts/AdminLayout";
 import { RiderLayout } from "@/components/layouts/RiderLayout";
+import { SendLayout } from "@/components/layouts/SendLayout";
 
 import { LandingPage } from "@/pages/LandingPage";
 import { ContactPage } from "@/pages/ContactPage";
@@ -41,6 +42,20 @@ import { RiderJobsPage } from "@/pages/RiderJobsPage";
 import { RiderJobDetailPage } from "@/pages/RiderJobDetailPage";
 import { RiderProfilePage } from "@/pages/RiderProfilePage";
 import { RiderRoutePage } from "@/pages/RiderRoutePage";
+import { SendPage } from "@/pages/SendPage";
+import { ShipmentWizardPage } from "@/pages/ShipmentWizardPage";
+import { DashboardShipmentsPage } from "@/pages/DashboardShipmentsPage";
+import { ShipmentDetailPage } from "@/pages/ShipmentDetailPage";
+import { AdminShipmentsPage } from "@/pages/AdminShipmentsPage";
+import { AdminShipmentDetailPage } from "@/pages/AdminShipmentDetailPage";
+import { AdminShippingPage } from "@/pages/AdminShippingPage";
+import { AdminSitePage } from "@/pages/AdminSitePage";
+import { QuotePage } from "@/pages/QuotePage";
+import { ServicesPage } from "@/pages/ServicesPage";
+import { AboutPage } from "@/pages/AboutPage";
+import { SeaCargoPage } from "@/pages/SeaCargoPage";
+import { AirCargoPage } from "@/pages/AirCargoPage";
+import { ExpressPage } from "@/pages/ExpressPage";
 import { TrackingPage } from "@/pages/TrackingPage";
 import { OfflinePage } from "@/pages/OfflinePage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -56,6 +71,12 @@ export function App() {
             <Route path="contact" element={<ContactPage />} />
             <Route path="privacy" element={<PrivacyPage />} />
             <Route path="terms" element={<TermsPage />} />
+            <Route path="about" element={<AboutPage />} />
+            <Route path="services" element={<ServicesPage />} />
+            <Route path="sea-cargo" element={<SeaCargoPage />} />
+            <Route path="quote" element={<QuotePage />} />
+            <Route path="air-cargo" element={<AirCargoPage />} />
+            <Route path="express" element={<ExpressPage />} />
           </Route>
 
           <Route element={<AuthLayout />}>
@@ -70,11 +91,18 @@ export function App() {
             <Route path="payment/callback" element={<PaymentCallbackPage />} />
           </Route>
 
+          <Route path="send" element={<SendLayout />}>
+            <Route index element={<SendPage />} />
+            <Route path=":type" element={<ShipmentWizardPage />} />
+          </Route>
+
           <Route path="dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardPage />} />
             <Route path="bookings" element={<DashboardBookingsPage />} />
             <Route path="bookings/:reference" element={<BookingDetailPage />} />
             <Route path="account" element={<PartnerStatementPage />} />
+            <Route path="shipments" element={<DashboardShipmentsPage />} />
+            <Route path="shipments/:reference" element={<ShipmentDetailPage />} />
           </Route>
 
           <Route path="admin/login" element={<AdminLoginPage />} />
@@ -87,6 +115,10 @@ export function App() {
             <Route path="partners/:id" element={<AdminPartnerDetailPage />} />
             <Route path="vehicles" element={<AdminVehiclesPage />} />
             <Route path="team" element={<AdminTeamPage />} />
+            <Route path="shipments" element={<AdminShipmentsPage />} />
+            <Route path="shipments/:reference" element={<AdminShipmentDetailPage />} />
+            <Route path="shipping" element={<AdminShippingPage />} />
+            <Route path="site" element={<AdminSitePage />} />
           </Route>
 
           <Route path="rider/login" element={<RiderLoginPage />} />

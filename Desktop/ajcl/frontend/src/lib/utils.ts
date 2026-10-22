@@ -98,3 +98,12 @@ export function slugify(input: string): string {
 
 /** Small helper to pause execution. */
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** "GB" becomes "United Kingdom". Uses the browser's own region names. */
+export function regionName(code: string): string {
+  try {
+    return new Intl.DisplayNames(["en"], { type: "region" }).of(code.toUpperCase()) ?? code;
+  } catch {
+    return code;
+  }
+}

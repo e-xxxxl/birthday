@@ -32,7 +32,6 @@ export function RiderJobDetailPage() {
   if (error || !data) {
     return (
       <EmptyState
-        icon="🔍"
         title="Job not found"
         description={error ?? "This job isn't assigned to you, or doesn't exist."}
         action={

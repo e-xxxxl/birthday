@@ -38,7 +38,7 @@ export function RouteSummary({
         return (
           <li key={i} className="relative flex gap-3 pb-4 last:pb-0">
             <div className="flex flex-col items-center">
-              <span className={cn("mt-1 size-2.5 shrink-0 rounded-full", dot)} />
+              <span className={cn("mt-1 size-2.5 shrink-0 rounded-sm", dot)} />
               {i < rows.length - 1 ? <span className="w-px flex-1 bg-line-strong" /> : null}
             </div>
             <div className="min-w-0 flex-1">

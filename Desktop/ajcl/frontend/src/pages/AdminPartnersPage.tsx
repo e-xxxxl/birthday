@@ -78,7 +78,7 @@ export function AdminPartnersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Partners</h1>
+        <h1 className="text-3xl font-bold sm:text-4xl">Partners</h1>
         <p className="mt-1 text-sm text-muted">
           Partners book normally but are billed on account instead of paying in the app. You set each
           partner&apos;s price markup and record the payments they make.
@@ -91,9 +91,9 @@ export function AdminPartnersPage() {
           { label: "Total owed", value: formatNaira(owed), owing: owed > 0 },
           { label: "Orders on account", value: String(partners.reduce((s, p) => s + p.orderCount, 0)) },
         ].map((c) => (
-          <div key={c.label} className="min-w-0 rounded-2xl border border-line bg-paper p-4 shadow-card sm:p-5">
+          <div key={c.label} className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:p-5">
             <p className="text-[11px] font-bold uppercase tracking-wide text-muted sm:text-xs">{c.label}</p>
-            <p className={cn("mt-1.5 text-2xl font-bold tabular-nums", c.owing && "text-[var(--color-warning)]")}>{c.value}</p>
+            <p className={cn("mt-1.5 text-2xl font-bold font-mono tabular-nums", c.owing && "text-[var(--color-warning)]")}>{c.value}</p>
           </div>
         ))}
       </div>
@@ -101,7 +101,7 @@ export function AdminPartnersPage() {
       <Card>
         <CardHeader title="Add a partner" />
         <CardBody>
-          <div className="mb-4 inline-flex rounded-full border border-line-strong p-0.5 text-sm font-semibold">
+          <div className="mb-4 inline-flex rounded-sm border border-line-strong p-0.5 text-sm font-semibold">
             {(
               [
                 ["existing", "Existing customer"],
@@ -112,7 +112,7 @@ export function AdminPartnersPage() {
                 key={k}
                 type="button"
                 onClick={() => setMode(k)}
-                className={cn("rounded-full px-4 py-1.5 transition", mode === k ? "bg-ink text-paper" : "text-ink-soft hover:text-ink")}
+                className={cn("rounded-sm px-4 py-1.5 transition", mode === k ? "bg-ink text-paper" : "text-ink-soft hover:text-ink")}
               >
                 {label}
               </button>
@@ -207,7 +207,7 @@ export function AdminPartnersPage() {
                       <p className="flex flex-wrap items-center gap-2 font-semibold">
                         {p.company || p.fullName}
                         {!p.active ? (
-                          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
+                          <span className="rounded-sm bg-surface-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
                             Inactive
                           </span>
                         ) : null}
@@ -219,7 +219,7 @@ export function AdminPartnersPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className={cn("text-sm font-bold tabular-nums", p.outstanding > 0 && "text-[var(--color-warning)]")}>
+                      <p className={cn("text-sm font-bold font-mono tabular-nums", p.outstanding > 0 && "text-[var(--color-warning)]")}>
                         {p.outstanding > 0 ? `${formatNaira(p.outstanding)} owed` : "Settled"}
                       </p>
                       <p className="text-xs text-muted">

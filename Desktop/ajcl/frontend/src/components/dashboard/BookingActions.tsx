@@ -54,7 +54,7 @@ export function BookingActions({ booking }: { booking: BookingDTO }) {
   )}`;
 
   return (
-    <div className="rounded-2xl border border-line bg-paper p-4 shadow-card">
+    <div className="rounded-2xl border border-line bg-paper shadow-card p-4">
       {error ? (
         <Alert tone="danger" className="mb-3">
           {error}

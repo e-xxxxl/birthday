@@ -17,7 +17,7 @@ export function PriceBreakdown({
       <span className={compact ? "text-sm font-semibold" : "text-sm font-bold uppercase tracking-wide text-muted"}>
         Total
       </span>
-      <span className={compact ? "text-base font-bold tabular-nums" : "text-2xl font-bold tabular-nums"}>
+      <span className={compact ? "text-base font-bold font-mono tabular-nums" : "text-2xl font-bold font-mono tabular-nums"}>
         {formatNaira(price.total)}
       </span>
     </div>

@@ -34,7 +34,6 @@ export function TrackingPage() {
           <LoadingBlock label="Loading your delivery…" />
         ) : error || !data ? (
           <EmptyState
-            icon="📦"
             title="Tracking link not found"
             description="This link may have expired or been typed incorrectly. Ask the sender to resend it."
           />
@@ -54,7 +53,7 @@ function TrackingView({ tracking }: { tracking: TrackingDTO }) {
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-3xl font-bold sm:text-4xl">
             {tracking.recipientName ? `Hi ${tracking.recipientName}, ` : ""}your delivery is on the way
           </h1>
           <p className="mt-1 font-mono text-sm text-muted">{tracking.bookingReference}</p>
@@ -80,7 +79,7 @@ function TrackingView({ tracking }: { tracking: TrackingDTO }) {
                   <li key={s} className="flex items-start gap-3">
                     <span
                       className={cn(
-                        "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold",
+                        "mt-0.5 grid size-6 shrink-0 place-items-center rounded-sm text-xs font-bold",
                         done ? "bg-ink text-paper" : "bg-surface-2 text-muted",
                       )}
                     >
@@ -105,11 +104,11 @@ function TrackingView({ tracking }: { tracking: TrackingDTO }) {
           <CardHeader title="Your rider" />
           <CardBody className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-muted">Name</p>
+              <p className="rule-label">Name</p>
               <p className="mt-0.5 font-semibold">{tracking.rider.name || "—"}</p>
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-muted">Phone</p>
+              <p className="rule-label">Phone</p>
               <p className="mt-0.5 font-semibold">
                 {tracking.rider.phone ? (
                   <a href={`tel:${tracking.rider.phone}`} className="hover:underline">
@@ -121,7 +120,7 @@ function TrackingView({ tracking }: { tracking: TrackingDTO }) {
               </p>
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-muted">Plate</p>
+              <p className="rule-label">Plate</p>
               <p className="mt-0.5 font-mono font-semibold tracking-wide">{tracking.rider.plate || "—"}</p>
             </div>
           </CardBody>
@@ -143,11 +142,11 @@ function TrackingView({ tracking }: { tracking: TrackingDTO }) {
         <CardHeader title="Route" />
         <CardBody className="space-y-3 text-sm">
           <div className="flex items-start gap-2">
-            <span className="mt-1.5 size-2 shrink-0 rounded-full bg-[var(--color-success)]" />
+            <span className="mt-1.5 size-2 shrink-0 rounded-sm bg-[var(--color-success)]" />
             <span className="text-ink-soft">{tracking.pickup.formattedAddress}</span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="mt-1.5 size-2 shrink-0 rounded-full bg-[var(--color-danger)]" />
+            <span className="mt-1.5 size-2 shrink-0 rounded-sm bg-[var(--color-danger)]" />
             <span className="text-ink-soft">{tracking.destination.formattedAddress}</span>
           </div>
           <p className="border-t border-line pt-3 text-xs text-muted">

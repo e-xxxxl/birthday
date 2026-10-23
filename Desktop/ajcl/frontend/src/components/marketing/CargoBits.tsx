@@ -64,7 +64,7 @@ type Fields = { fullName: string; address: string; email: string; phone: string;
 const EMPTY: Fields = { fullName: "", address: "", email: "", phone: "", destination: "", items: "" };
 
 /** The Air Cargo / Sea Cargo contact form. It goes to the office inbox. */
-export function CargoEnquiryForm({ service }: { service: "air" | "sea" }) {
+export function CargoEnquiryForm({ service }: { service: "air" | "sea" | "express" }) {
   const [form, setForm] = useState<Fields>(EMPTY);
   const [website, setWebsite] = useState(""); // hidden honeypot
   const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
@@ -129,7 +129,9 @@ export function CargoEnquiryForm({ service }: { service: "air" | "sea" }) {
   return (
     <form onSubmit={submit} noValidate className="space-y-4 rounded-3xl border border-line bg-paper p-6 shadow-card sm:p-8">
       <div>
-        <h3 className="text-2xl font-bold">Request a {service === "air" ? "air" : "sea"} cargo quote</h3>
+        <h3 className="text-2xl font-bold">
+          {service === "express" ? "Ask about AJCL Express" : `Request a ${service === "air" ? "air" : "sea"} cargo quote`}
+        </h3>
         <p className="mt-1 text-sm text-muted">Tell us what you want to ship and where. We will get back to you.</p>
       </div>
 

@@ -92,10 +92,17 @@ export function AdminShipmentDetailPage() {
         </p>
       </div>
 
-      {s.status === "booking_failed" ? (
-        <Alert tone="danger" title="Paid, but the carrier booking failed">
+      {s.status === "booking_failed" || (s.status === "paid" && !s.terminal.trackingNumber && s.terminal.bookingError) ? (
+        <Alert
+          tone={s.status === "paid" ? "warning" : "danger"}
+          title={s.status === "paid" ? "Paid, waiting to be booked on Terminal" : "Paid, but the carrier booking failed"}
+        >
           <p>{s.terminal.bookingError}</p>
-          <p className="mt-1">The customer has paid and has not been refunded. Fix the cause (for example fund the Terminal wallet), then retry.</p>
+          <p className="mt-1">
+            {s.status === "paid"
+              ? "The customer has paid and the shipment is saved as a draft in Terminal. Fund the Terminal wallet: it is booked automatically within a few minutes, or press Book now."
+              : "The customer has paid and has not been refunded. Fix the cause (for example fund the Terminal wallet), then retry."}
+          </p>
           {isAdmin ? (
             <Button
               className="mt-3"
@@ -109,7 +116,7 @@ export function AdminShipmentDetailPage() {
                 }
               }}
             >
-              Retry booking
+              {s.status === "paid" ? "Book now" : "Retry booking"}
             </Button>
           ) : (
             <p className="mt-2 font-semibold">Ask an admin to retry once it is fixed.</p>

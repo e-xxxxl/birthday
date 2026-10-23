@@ -15,7 +15,7 @@ import type { RateEstimate, ShippingConfig } from "@/types/shipping";
 export function QuotePage() {
   useDocumentTitle("International shipping quote");
   const { data: config } = useAsync(() => http.get<ShippingConfig>("/api/shipments/config"), []);
-  const [form, setForm] = useState({ country: "", state: "", city: "", weight: "", length: "", width: "", height: "" });
+  const [form, setForm] = useState({ country: "", state: "", city: "", zip: "", weight: "", length: "", width: "", height: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +42,7 @@ export function QuotePage() {
           country: form.country,
           state: form.state.trim(),
           city: form.city.trim(),
+          zip: form.zip.trim() || undefined,
           weightKg: Number(form.weight),
           dimensions: hasDims ? { lengthCm: Number(form.length), widthCm: Number(form.width), heightCm: Number(form.height) } : undefined,
         }),
@@ -72,6 +73,7 @@ export function QuotePage() {
                 stacked
                 errors={{ country: errors.country, state: errors.state, city: errors.city }}
               />
+              <Input label="Postcode (optional)" value={form.zip} onChange={set("zip")} hint="Some countries need it to price the delivery" containerClassName="max-w-xs" />
               <Input label="Weight (kg)" required type="number" min="0.1" step="0.1" value={form.weight} onChange={set("weight")} error={errors.weight} hint="We weigh it at our office, and bill by the next whole kilogram." />
               <div className="grid grid-cols-3 gap-3">
                 <Input label="Length (cm)" type="number" min="0" value={form.length} onChange={set("length")} />

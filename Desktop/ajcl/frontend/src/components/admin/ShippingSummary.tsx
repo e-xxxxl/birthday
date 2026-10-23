@@ -42,6 +42,7 @@ export function ShippingAttention() {
   const items = [
     { label: "To receive", value: n.toReceive, href: "/admin/shipments" },
     { label: "To weigh and quote", value: n.toWeigh, href: "/admin/shipments" },
+    { label: "Paid, waiting to be booked", value: n.paid, href: "/admin/shipments", danger: true },
     { label: "Paid, booking failed", value: n.bookingFailed, href: "/admin/shipments", danger: true },
   ];
   return (

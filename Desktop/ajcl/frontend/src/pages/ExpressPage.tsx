@@ -3,6 +3,7 @@ import { Icon } from "@/components/ui/Icon";
 import { LoadingBlock } from "@/components/ui/Feedback";
 import { Reveal, RevealImage } from "@/components/ui/Reveal";
 import { PageBanner } from "@/components/marketing/PageBanner";
+import { CargoEnquiryForm } from "@/components/marketing/CargoBits";
 import { DisclaimerNotice } from "@/components/shipping/ShipmentBits";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -77,6 +78,12 @@ export function ExpressPage() {
             </Reveal>
           </div>
         ) : null}
+
+        <div id="enquiry" className="mx-auto mt-20 max-w-3xl scroll-mt-28 lg:mt-28">
+          <Reveal>
+            <CargoEnquiryForm service="express" />
+          </Reveal>
+        </div>
       </div>
     </>
   );

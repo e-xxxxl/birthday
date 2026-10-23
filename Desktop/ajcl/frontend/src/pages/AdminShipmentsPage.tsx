@@ -36,6 +36,7 @@ export function AdminShipmentsPage() {
 
   const chips: { key: Filter; label: string; n?: number }[] = [
     { key: "todo", label: "Needs action", n: todoCount },
+    { key: "paid", label: "Paid, waiting to be booked", n: counts.paid ?? 0 },
     { key: "all", label: "All" },
     ...(["quote_sent", "booked", "in_transit", "delivered", "cancelled"] as ShipmentStatus[]).map((s) => ({
       key: s as Filter,
@@ -104,7 +105,10 @@ export function AdminShipmentsPage() {
               </p>
               <p className="text-xs text-muted">{s.createdAt ? formatDate(s.createdAt) : ""}</p>
             </div>
-            <ShipmentStatusBadge status={s.status} />
+            <div className="flex flex-col items-start gap-1 sm:items-end">
+              <ShipmentStatusBadge status={s.status} />
+              {s.status === "paid" && !s.terminal.trackingNumber ? <span className="text-xs font-semibold text-[var(--color-warning)]">Waiting to be booked on Terminal</span> : null}
+            </div>
           </Link>
         ))}
       </div>

@@ -20,14 +20,102 @@ export const SERVICE_LINKS: { label: string; href: string; icon: IconName; blurb
   { label: "AJCL Express", href: "/express", icon: "box", blurb: "Monthly price list" },
 ];
 
-const NAV = [
+type MenuItem = { label: string; href: string; icon: IconName; blurb: string; external?: boolean };
+
+/** Reach us. Kept in a "More" menu so the main links always fit on one line. */
+const MORE_LINKS: MenuItem[] = [
+  { label: "Contact Us", href: "/contact", icon: "mail", blurb: "Questions, quotes and support" },
+  { label: "Call us", href: site.contact.phoneHref, icon: "phone", blurb: site.contact.phone, external: true },
+  { label: "WhatsApp", href: site.contact.whatsappHref, icon: "whatsapp", blurb: "Chat with our team", external: true },
+];
+
+const NAV: { label: string; href: string; menu?: "services" | "more" }[] = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/about" },
-  { label: "Services", href: "/services", menu: true },
+  { label: "Services", href: "/services", menu: "services" },
   { label: "Book a Ride", href: "/book" },
   { label: "AJCL Express", href: "/express" },
-  { label: "Contact", href: "/contact" },
+  { label: "More", href: "/contact", menu: "more" },
 ];
+
+/** A drop-down under a main link. Opens on hover, and for keyboard users when focus is inside it. */
+function NavMenu({
+  label,
+  href,
+  active,
+  items,
+  width,
+  open,
+  setOpen,
+}: {
+  label: string;
+  href: string;
+  active: boolean;
+  items: MenuItem[];
+  width: string;
+  open: boolean;
+  setOpen: (v: boolean) => void;
+}) {
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
+      <Link
+        href={href}
+        className={cn(
+          "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-[0.95rem] font-bold transition-colors",
+          active ? "text-accent" : "text-white/90 hover:text-accent",
+        )}
+        aria-haspopup="true"
+        aria-expanded={open}
+      >
+        {label}
+        <svg viewBox="0 0 12 12" className={cn("size-3 transition-transform", open && "rotate-180")} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M2.5 4.5L6 8l3.5-3.5" />
+        </svg>
+      </Link>
+      <div
+        className={cn(
+          "absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 transition-all duration-200",
+          width,
+          open ? "visible translate-y-0 opacity-100" : "invisible translate-y-2 opacity-0",
+        )}
+      >
+        <div className="grid gap-1 rounded-3xl bg-paper p-3 text-ink shadow-pop">
+          {items.map((s) => {
+            const inner = (
+              <>
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-dark">
+                  <Icon name={s.icon} className="size-5" />
+                </span>
+                <span>
+                  <span className="block text-sm font-bold">{s.label}</span>
+                  <span className="block text-xs text-muted">{s.blurb}</span>
+                </span>
+              </>
+            );
+            const cls = "flex items-center gap-3 rounded-2xl p-3 transition-colors hover:bg-surface";
+            return s.external ? (
+              <a key={s.href} href={s.href} className={cls} {...(s.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}>
+                {inner}
+              </a>
+            ) : (
+              <Link key={s.href} href={s.href} className={cls}>
+                {inner}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function TopBar() {
   const config = useShippingConfig();
@@ -69,6 +157,7 @@ export function SiteHeader() {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [more, setMore] = useState(false);
   const [stuck, setStuck] = useState(false);
 
   useEffect(() => {
@@ -80,6 +169,7 @@ export function SiteHeader() {
   useEffect(() => {
     setOpen(false);
     setMenu(false);
+    setMore(false);
   }, [pathname]);
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
@@ -96,51 +186,18 @@ export function SiteHeader() {
             <span aria-hidden className="absolute -right-2.5 bottom-0 h-3 w-24 rounded-full bg-accent" />
           </div>
 
-          <nav className="hidden items-center gap-1 xl:flex" aria-label="Main">
+          <nav className="hidden flex-nowrap items-center gap-0.5 whitespace-nowrap xl:flex" aria-label="Main">
             {NAV.map((l) =>
-              l.menu ? (
-                <div key={l.href} className="relative" onMouseEnter={() => setMenu(true)} onMouseLeave={() => setMenu(false)}>
-                  <Link
-                    href={l.href}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[0.95rem] font-bold transition-colors",
-                      inServices ? "text-accent" : "text-white/90 hover:text-accent",
-                    )}
-                    aria-haspopup="true"
-                    aria-expanded={menu}
-                  >
-                    {l.label}
-                    <svg viewBox="0 0 12 12" className={cn("size-3 transition-transform", menu && "rotate-180")} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M2.5 4.5L6 8l3.5-3.5" />
-                    </svg>
-                  </Link>
-                  <div
-                    className={cn(
-                      "absolute left-1/2 top-full z-50 w-[26rem] -translate-x-1/2 pt-3 transition-all duration-200",
-                      menu ? "visible translate-y-0 opacity-100" : "invisible translate-y-2 opacity-0",
-                    )}
-                  >
-                    <div className="grid gap-1 rounded-3xl bg-paper p-3 text-ink shadow-pop">
-                      {SERVICE_LINKS.map((s) => (
-                        <Link key={s.href} href={s.href} className="flex items-center gap-3 rounded-2xl p-3 transition-colors hover:bg-surface">
-                          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-dark">
-                            <Icon name={s.icon} className="size-5" />
-                          </span>
-                          <span>
-                            <span className="block text-sm font-bold">{s.label}</span>
-                            <span className="block text-xs text-muted">{s.blurb}</span>
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              l.menu === "services" ? (
+                <NavMenu key={l.href + l.label} label={l.label} href={l.href} active={inServices} items={SERVICE_LINKS} width="w-[26rem]" open={menu} setOpen={setMenu} />
+              ) : l.menu === "more" ? (
+                <NavMenu key={l.href + l.label} label={l.label} href={l.href} active={pathname.startsWith("/contact")} items={MORE_LINKS} width="w-80" open={more} setOpen={setMore} />
               ) : (
                 <Link
                   key={l.href}
                   href={l.href}
                   className={cn(
-                    "rounded-lg px-3.5 py-2 text-[0.95rem] font-bold transition-colors",
+                    "whitespace-nowrap rounded-lg px-3 py-2 text-[0.95rem] font-bold transition-colors",
                     isActive(l.href) ? "text-accent" : "text-white/90 hover:text-accent",
                   )}
                 >
@@ -150,8 +207,8 @@ export function SiteHeader() {
             )}
           </nav>
 
-          <div className="hidden items-center gap-3 xl:flex">
-            <a href={site.contact.phoneHref} className="mr-1 flex items-center gap-2.5 text-left">
+          <div className="hidden shrink-0 items-center gap-3 whitespace-nowrap xl:flex">
+            <a href={site.contact.phoneHref} className="mr-1 hidden items-center gap-2.5 text-left 2xl:flex">
               <span className="grid size-10 place-items-center rounded-full bg-white/10 text-accent">
                 <Icon name="phone" className="size-5" />
               </span>
@@ -204,12 +261,19 @@ export function SiteHeader() {
                   </Link>
                   {l.menu ? (
                     <div className="mb-2 ml-3 grid gap-0.5 border-l-2 border-white/15 pl-3">
-                      {SERVICE_LINKS.map((s) => (
-                        <Link key={s.href} href={s.href} className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-white/80 hover:text-accent">
-                          <Icon name={s.icon} className="size-4 text-accent" />
-                          {s.label}
-                        </Link>
-                      ))}
+                      {(l.menu === "more" ? MORE_LINKS : SERVICE_LINKS).map((s) =>
+                        "external" in s && s.external ? (
+                          <a key={s.href} href={s.href} className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-white/80 hover:text-accent">
+                            <Icon name={s.icon} className="size-4 text-accent" />
+                            {s.label}
+                          </a>
+                        ) : (
+                          <Link key={s.href} href={s.href} className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-white/80 hover:text-accent">
+                            <Icon name={s.icon} className="size-4 text-accent" />
+                            {s.label}
+                          </Link>
+                        ),
+                      )}
                     </div>
                   ) : null}
                 </div>

@@ -284,7 +284,15 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
       } catch {
         /* ignore */
       }
-      const s = res.shipment;
+      let s = res.shipment;
+      // The prices are loaded when the shipment is created. If that did not work the first time, try once more.
+      if (international && draft.carrier && !s.prepay?.available) {
+        try {
+          s = (await http.post<{ shipment: Shipment }>(`/api/shipments/${s.reference}/prepay-retry`)).shipment;
+        } catch {
+          /* the shipment page offers it again */
+        }
+      }
       if (international && draft.carrier) {
         try {
           sessionStorage.setItem(`ajc:carrier:${s.reference}`, draft.carrier);

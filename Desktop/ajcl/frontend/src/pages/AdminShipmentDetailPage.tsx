@@ -93,6 +93,12 @@ export function AdminShipmentDetailPage() {
         </p>
       </div>
 
+      {s.staff?.prepayError && !s.shippingPayment?.paid ? (
+        <Alert tone="warning" title="Carrier prices could not be loaded for the customer">
+          {s.staff.prepayError}
+        </Alert>
+      ) : null}
+
       {s.staff?.createdBy ? (
         <Alert tone="info" title="Created on the admin side">
           {s.staff.offlinePayment

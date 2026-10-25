@@ -85,6 +85,18 @@ export function ShipmentDetailPage() {
     }
   }
 
+  async function retryPrices() {
+    setBusy("prices");
+    try {
+      await http.post(`/api/shipments/${s.reference}/prepay-retry`);
+      reload();
+    } catch (err) {
+      toast.error("Could not load the prices", err instanceof HttpError ? err.message : undefined);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function refresh() {
     setBusy("refresh");
     try {
@@ -167,6 +179,15 @@ export function ShipmentDetailPage() {
                 </p>
               </CardBody>
             </Card>
+          ) : null}
+
+          {s.prepay?.unavailable ? (
+            <Alert tone="info" title="Carrier prices are not showing yet">
+              <p>We could not load the carrier prices just now. Try again to pay for shipping now, or bring your package in and we will send you the price after it is weighed.</p>
+              <Button className="mt-3" size="sm" onClick={retryPrices} loading={busy === "prices"}>
+                Try again
+              </Button>
+            </Alert>
           ) : null}
 
           {s.prepay?.available ? (

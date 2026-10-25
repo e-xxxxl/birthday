@@ -73,9 +73,9 @@ export type Shipment = {
   };
   shippingPayment?: { paid: boolean; amount?: number; paidAt?: string };
   /** Staff only: created on the admin side, and how it was booked without an online payment. */
-  staff?: { createdBy?: string; offlinePayment?: { note: string; byName?: string; at?: string } };
+  staff?: { createdBy?: string; prepayError?: string; offlinePayment?: { note: string; byName?: string; at?: string } };
   /** International: pay before the parcel is weighed. */
-  prepay?: { available: boolean; paid: boolean; additionalDue: number };
+  prepay?: { available: boolean; paid: boolean; additionalDue: number; unavailable?: boolean };
   terminal: {
     carrierName?: string;
     trackingNumber?: string;

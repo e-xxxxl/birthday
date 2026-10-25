@@ -70,6 +70,7 @@ export function LocationPicker({
   stacked = false,
   errors = {},
   required = true,
+  hideLockedCountry = false,
 }: {
   value: PlaceValue;
   onChange: (next: PlaceValue) => void;
@@ -81,6 +82,8 @@ export function LocationPicker({
   stacked?: boolean;
   errors?: { country?: string; state?: string; city?: string };
   required?: boolean;
+  /** With a locked country, do not show the country at all (it is obvious, for example the sender in Nigeria). */
+  hideLockedCountry?: boolean;
 }) {
   const country = lockedCountry ?? value.country;
 
@@ -113,7 +116,7 @@ export function LocationPicker({
 
   return (
     <div className={stacked ? "grid gap-4" : "grid gap-4 sm:grid-cols-3"}>
-      {lockedCountry ? (
+      {lockedCountry && hideLockedCountry ? null : lockedCountry ? (
         <FieldWrapper label="Country" required={required}>
           <div className="field-shell bg-surface" aria-readonly>
             <span className="font-semibold">{regionName(lockedCountry)}</span>

@@ -50,6 +50,10 @@ import { AdminShipmentsPage } from "@/pages/AdminShipmentsPage";
 import { AdminShipmentDetailPage } from "@/pages/AdminShipmentDetailPage";
 import { AdminShippingPage } from "@/pages/AdminShippingPage";
 import { AdminSitePage } from "@/pages/AdminSitePage";
+import { AdminBlogPage } from "@/pages/AdminBlogPage";
+import { AdminNewShipmentPage } from "@/pages/AdminNewShipmentPage";
+import { BlogPage } from "@/pages/BlogPage";
+import { BlogPostPage } from "@/pages/BlogPostPage";
 import { QuotePage } from "@/pages/QuotePage";
 import { ServicesPage } from "@/pages/ServicesPage";
 import { AboutPage } from "@/pages/AboutPage";
@@ -77,6 +81,8 @@ export function App() {
             <Route path="quote" element={<QuotePage />} />
             <Route path="air-cargo" element={<AirCargoPage />} />
             <Route path="express" element={<ExpressPage />} />
+            <Route path="blog" element={<BlogPage />} />
+            <Route path="blog/:slug" element={<BlogPostPage />} />
           </Route>
 
           <Route element={<AuthLayout />}>
@@ -116,9 +122,11 @@ export function App() {
             <Route path="vehicles" element={<AdminVehiclesPage />} />
             <Route path="team" element={<AdminTeamPage />} />
             <Route path="shipments" element={<AdminShipmentsPage />} />
+            <Route path="shipments/new" element={<AdminNewShipmentPage />} />
             <Route path="shipments/:reference" element={<AdminShipmentDetailPage />} />
             <Route path="shipping" element={<AdminShippingPage />} />
             <Route path="site" element={<AdminSitePage />} />
+            <Route path="blog" element={<AdminBlogPage />} />
           </Route>
 
           <Route path="rider/login" element={<RiderLoginPage />} />

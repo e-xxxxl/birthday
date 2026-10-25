@@ -5,7 +5,7 @@ import { site } from "@/config/site";
 export function useDocumentTitle(title?: string): void {
   useEffect(() => {
     const previous = document.title;
-    document.title = title ? `${title} · ${site.name}` : `${site.name} — Book a Rider`;
+    document.title = title ? `${title} · ${site.name}` : `${site.name} | Delivery and shipping from Lagos`;
     return () => {
       document.title = previous;
     };

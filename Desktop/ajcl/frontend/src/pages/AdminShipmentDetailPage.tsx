@@ -44,6 +44,7 @@ export function AdminShipmentDetailPage() {
   const [bookForm, setBookForm] = useState({ carrierName: "", trackingNumber: "", trackingUrl: "" });
   const [refund, setRefund] = useState({ target: "pickup_fee", amount: "", reason: "", reference: "" });
   const [cancelReason, setCancelReason] = useState("");
+  const [offline, setOffline] = useState({ rateId: "", note: "" });
 
   if (loading && !data) return <LoadingBlock />;
   if (error || !data) return <Alert tone="danger">{error ?? "Shipment not found."}</Alert>;
@@ -91,6 +92,65 @@ export function AdminShipmentDetailPage() {
           {s.handover.method === "pickup" ? "Rider pickup" : "Customer drop-off"} · {s.customer?.name} ({s.customer?.email}, {s.customer?.phone})
         </p>
       </div>
+
+      {s.staff?.createdBy ? (
+        <Alert tone="info" title="Created on the admin side">
+          {s.staff.offlinePayment
+            ? `Created by ${s.staff.createdBy}. Booked without an online payment (${s.staff.offlinePayment.note}).`
+            : `Created by ${s.staff.createdBy}. It is saved in Terminal as a draft and nothing has been charged online.`}
+        </Alert>
+      ) : null}
+
+      {isAdmin && s.staff?.createdBy && !s.staff.offlinePayment && ["weight_confirmed", "quote_sent"].includes(s.status) ? (
+        <Card>
+          <CardBody className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold">Book without an online payment</h2>
+              <p className="text-sm text-muted">Use this when the customer paid by transfer or cash, or when it is not charged. It books on Terminal now and uses the carrier wallet.</p>
+            </div>
+            {s.quote.options.length === 0 ? (
+              <Alert tone="warning">No carrier rates yet. Use "Fetch rates" below, then come back here.</Alert>
+            ) : (
+              <div role="radiogroup" className="space-y-3">
+                {s.quote.options.map((o) => (
+                  <QuoteOptionCard
+                    key={o.rateId}
+                    option={o}
+                    breakdown
+                    selected={(offline.rateId || (s.quote.options.length === 1 ? o.rateId : "")) === o.rateId}
+                    onSelect={() => setOffline({ ...offline, rateId: o.rateId })}
+                  />
+                ))}
+              </div>
+            )}
+            <Input label="How was it paid, or why is it not charged?" required value={offline.note} onChange={(e) => setOffline({ ...offline, note: e.target.value })} placeholder="e.g. Paid by transfer, GTB, 24 Oct" maxLength={300} />
+            <Button
+              loading={busy === "offline"}
+              disabled={s.quote.options.length === 0 || offline.note.trim().length < 3}
+              onClick={async () => {
+                const rateId = offline.rateId || (s.quote.options.length === 1 ? s.quote.options[0].rateId : "");
+                if (!rateId) {
+                  toast.error("Choose a delivery option first");
+                  return;
+                }
+                const r = await run("offline", () => http.post<Result>(`${base}/book-without-payment`, { rateId, note: offline.note.trim() }), undefined);
+                if (r) {
+                  r.shipment.status === "booked" ? toast.success("Booked with the carrier") : toast.error("Waiting to be booked", r.shipment.terminal.bookingError ?? "Check the wallet, then press Book now.");
+                  reload();
+                }
+              }}
+            >
+              Book on Terminal
+            </Button>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {s.prepay?.paid && !["booked", "in_transit", "delivered"].includes(s.status) ? (
+        <Alert tone="info" title={`Paid in advance: ${formatNaira(s.shippingPayment?.amount ?? 0)}`}>
+          The customer paid on their own weight ({s.parcel.estimatedWeightKg} kg). Weigh it when it arrives: the same carrier is priced on the real weight, and the customer is asked only for any difference. If there is none, it is booked automatically.
+        </Alert>
+      ) : null}
 
       {s.status === "booking_failed" || (s.status === "paid" && !s.terminal.trackingNumber && s.terminal.bookingError) ? (
         <Alert

@@ -72,6 +72,10 @@ export type Shipment = {
     draft?: boolean;
   };
   shippingPayment?: { paid: boolean; amount?: number; paidAt?: string };
+  /** Staff only: created on the admin side, and how it was booked without an online payment. */
+  staff?: { createdBy?: string; offlinePayment?: { note: string; byName?: string; at?: string } };
+  /** International: pay before the parcel is weighed. */
+  prepay?: { available: boolean; paid: boolean; additionalDue: number };
   terminal: {
     carrierName?: string;
     trackingNumber?: string;
@@ -189,3 +193,7 @@ export type PopupFlyer = {
   active: boolean;
   status: "live" | "scheduled" | "expired" | "off";
 };
+
+export type BlogCard = { id: string; title: string; slug: string; excerpt: string; coverUrl: string | null; publishedAt: string };
+export type BlogPost = BlogCard & { body: string; author: string | null };
+export type AdminBlogPost = BlogCard & { body: string; published: boolean; updatedAt: string };

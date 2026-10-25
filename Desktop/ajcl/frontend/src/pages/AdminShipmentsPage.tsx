@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AppLink as Link } from "@/components/ui/AppLink";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Alert, LoadingBlock } from "@/components/ui/Feedback";
+import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { ShipmentStatusBadge } from "@/components/shipping/ShipmentBits";
 import { useAsync } from "@/hooks/useAsync";
@@ -52,13 +53,18 @@ export function AdminShipmentsPage() {
           <h1 className="text-3xl font-bold sm:text-4xl">Shipments desk</h1>
           <p className="text-sm text-muted">Interstate and international shipments.</p>
         </div>
-        <Input
-          aria-label="Search shipments"
-          placeholder="Search reference, name or tracking"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          containerClassName="w-full sm:w-72"
-        />
+        <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+          <Input
+            aria-label="Search shipments"
+            placeholder="Search reference, name or tracking"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            containerClassName="w-full sm:w-72"
+          />
+          <Button href="/admin/shipments/new" size="sm">
+            New shipment
+          </Button>
+        </div>
       </div>
 
       <div className="no-scrollbar flex gap-2 overflow-x-auto">

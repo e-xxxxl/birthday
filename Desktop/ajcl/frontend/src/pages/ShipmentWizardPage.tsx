@@ -14,11 +14,11 @@ import { cn, formatNaira, regionName } from "@/lib/utils";
 import { vehicleImage } from "@/lib/vehicle-media";
 import { LocationPicker } from "@/components/shipping/LocationPicker";
 import type { LocationDTO, QuoteDTO } from "@/types";
-import type { Shipment, ShippingConfig } from "@/types/shipping";
+import type { RateEstimate, Shipment, ShippingConfig } from "@/types/shipping";
 import { toInternationalPhone, phoneProblem } from "@/lib/phone";
 import { PhoneField } from "@/components/shipping/PhoneField";
 
-type PartyForm = {
+export type PartyForm = {
   name: string;
   phone: string;
   email: string;
@@ -29,7 +29,7 @@ type PartyForm = {
   country: string;
   zip: string;
 };
-type ItemForm = { description: string; quantity: string; value: string; hsCode: string };
+export type ItemForm = { description: string; quantity: string; value: string; hsCode: string };
 type Draft = {
   sender: PartyForm;
   receiver: PartyForm;
@@ -47,9 +47,12 @@ type Draft = {
   time: string;
   notes: string;
   agreed: boolean;
+  /** International: the carrier picked on the Rates step, and the price shown for it. */
+  carrier: string | null;
+  carrierTotal: number | null;
 };
 
-const blankParty = (country: string): PartyForm => ({
+export const blankParty = (country: string): PartyForm => ({
   name: "",
   phone: "",
   email: "",
@@ -60,10 +63,12 @@ const blankParty = (country: string): PartyForm => ({
   country,
   zip: "",
 });
-const blankItem = (): ItemForm => ({ description: "", quantity: "1", value: "", hsCode: "" });
+export const blankItem = (): ItemForm => ({ description: "", quantity: "1", value: "", hsCode: "" });
 
-const STEPS = ["Package", "Contents", "Handover", "Review"] as const;
-type StepKey = (typeof STEPS)[number];
+type StepKey = "Package" | "Contents" | "Handover" | "Rates" | "Review";
+const STEPS_INTERSTATE: StepKey[] = ["Package", "Contents", "Handover", "Review"];
+/** International: once the handover is chosen, the next thing is to see carrier rates and pick one. */
+const STEPS_INTERNATIONAL: StepKey[] = ["Package", "Contents", "Handover", "Rates", "Review"];
 
 export function ShipmentWizardPage() {
   const { type } = useParams();
@@ -101,6 +106,8 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
       time: "",
       notes: "",
       agreed: false,
+      carrier: null,
+      carrierTotal: null,
     };
     try {
       const raw = sessionStorage.getItem(storageKey);
@@ -268,6 +275,13 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
         /* ignore */
       }
       const s = res.shipment;
+      if (international && draft.carrier) {
+        try {
+          sessionStorage.setItem(`ajc:carrier:${s.reference}`, draft.carrier);
+        } catch {
+          /* ignore */
+        }
+      }
       if (s.handover.method === "pickup" && s.handover.pickupBookingReference) {
         // Straight on to paying the pickup fee. If that fails the shipment page offers it again.
         try {
@@ -280,6 +294,19 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
           /* fall through to the shipment page */
         }
       }
+      // International drop-off with a carrier already chosen: go straight to paying for shipping, if the price still matches.
+      if (international && draft.carrier && s.prepay?.available) {
+        const option = s.quote.options.find((o) => o.carrierName === draft.carrier);
+        if (option && Math.abs(option.total - (draft.carrierTotal ?? option.total)) < 1) {
+          try {
+            const pay = await http.post<{ authorizationUrl: string }>(`/api/shipments/${s.reference}/pay`, { rateId: option.rateId });
+            window.location.href = pay.authorizationUrl;
+            return;
+          } catch {
+            /* fall through to the shipment page */
+          }
+        }
+      }
       navigate(`/dashboard/shipments/${s.reference}`);
     } catch (err) {
       setSubmitError(err instanceof HttpError ? err.message : "Could not create the shipment. Please try again.");
@@ -287,7 +314,8 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
     }
   }
 
-  const stepIndex = STEPS.indexOf(step);
+  const steps = international ? STEPS_INTERNATIONAL : STEPS_INTERSTATE;
+  const stepIndex = steps.indexOf(step);
 
   return (
     <div className="container-page py-6 md:py-10">
@@ -300,7 +328,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
         </div>
 
         <ol className="mb-6 flex gap-2" aria-label="Progress">
-          {STEPS.map((s, i) => (
+          {steps.map((s, i) => (
             <li key={s} className="flex-1">
               <div className={cn("h-1.5 rounded-sm", i <= stepIndex ? "bg-ink" : "bg-line-strong")} />
               <p className={cn("mt-1.5 text-xs font-semibold", i === stepIndex ? "text-ink" : "text-muted")}>
@@ -338,8 +366,10 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
             config={config}
             officeLoc={officeLoc}
             onBack={() => go("Contents")}
-            onNext={() => validateHandover() && go("Review")}
+            onNext={() => validateHandover() && go(international ? "Rates" : "Review")}
           />
+        ) : step === "Rates" ? (
+          <RatesStep draft={draft} errors={errors} patch={patch} onBack={() => go("Handover")} onNext={() => go("Review")} />
         ) : (
           <ReviewStep
             international={international}
@@ -349,7 +379,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
             config={config}
             submitting={submitting}
             submitError={submitError}
-            onBack={() => go("Handover")}
+            onBack={() => go(international ? "Rates" : "Handover")}
             onSubmit={submit}
           />
         )}
@@ -362,7 +392,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
 
 type StepCommon = { draft: Draft; errors: Record<string, string>; patch: (p: Partial<Draft>) => void };
 
-function PartyFields({
+export function PartyFields({
   prefix,
   title,
   party,
@@ -371,6 +401,7 @@ function PartyFields({
   lockedCountry,
   excludeCountries,
   zipRequired,
+  hideCountry,
 }: {
   prefix: "s" | "r";
   title: string;
@@ -382,6 +413,8 @@ function PartyFields({
   excludeCountries?: string[];
   /** The carrier needs a postcode for this address. */
   zipRequired?: boolean;
+  /** Do not show the (fixed) country. */
+  hideCountry?: boolean;
 }) {
   const e = (k: string) => errors[`${prefix}-${k}`];
   return (
@@ -397,6 +430,7 @@ function PartyFields({
           value={{ country: party.country, state: party.state, city: party.city }}
           onChange={(p) => onChange({ country: p.country, state: p.state, city: p.city })}
           lockedCountry={lockedCountry}
+          hideLockedCountry={hideCountry}
           excludeCountries={excludeCountries}
           errors={{ country: e("country"), state: e("state"), city: e("city") }}
         />
@@ -422,7 +456,15 @@ function PackageStep({
 }) {
   return (
     <div className="space-y-5">
-      <PartyFields prefix="s" title="Sender (in Nigeria)" party={draft.sender} errors={errors} onChange={(p) => patchParty("sender", p)} lockedCountry="NG" />
+      <PartyFields
+        prefix="s"
+        title={international ? "Sender" : "Sender (in Nigeria)"}
+        party={draft.sender}
+        errors={errors}
+        onChange={(p) => patchParty("sender", p)}
+        lockedCountry="NG"
+        hideCountry={international}
+      />
       <PartyFields
         prefix="r"
         title="Receiver"
@@ -702,6 +744,165 @@ function HandoverStep({
   );
 }
 
+/* ── Step 4 (international): carrier rates ─────────────────────────────── */
+
+const ratesCache = new Map<string, RateEstimate>();
+
+function RatesStep({ draft, patch, onBack, onNext }: StepCommon & { onBack: () => void; onNext: () => void }) {
+  const hasDims = draft.length && draft.width && draft.height;
+  const body = {
+    shipmentType: "international",
+    from: {
+      country: draft.sender.country,
+      state: draft.sender.state,
+      city: draft.sender.city,
+      zip: draft.sender.zip.trim() || undefined,
+    },
+    country: draft.receiver.country,
+    state: draft.receiver.state,
+    city: draft.receiver.city,
+    zip: draft.receiver.zip.trim() || undefined,
+    weightKg: Number(draft.weight),
+    dimensions: hasDims ? { lengthCm: Number(draft.length), widthCm: Number(draft.width), heightCm: Number(draft.height) } : undefined,
+  };
+  const key = JSON.stringify(body);
+  const [state, setState] = useState<{ loading: boolean; error?: string; data?: RateEstimate }>(() => ({ loading: !ratesCache.has(key), data: ratesCache.get(key) }));
+  const [attempt, setAttempt] = useState(0);
+  const [pickError, setPickError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const cached = ratesCache.get(key);
+    if (cached && attempt === 0) {
+      setState({ loading: false, data: cached });
+      return;
+    }
+    let cancelled = false;
+    setState({ loading: true });
+    http
+      .post<RateEstimate>("/api/shipments/estimate", body)
+      .then((data) => {
+        ratesCache.set(key, data);
+        if (!cancelled) setState({ loading: false, data });
+      })
+      .catch((err) => {
+        if (!cancelled) setState({ loading: false, error: err instanceof HttpError ? err.message : "We could not get carrier rates right now." });
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, attempt]);
+
+  const options = state.data?.options ?? [];
+  // A carrier chosen earlier is dropped if it is no longer offered for this route and weight.
+  useEffect(() => {
+    if (state.data && draft.carrier && !options.some((o) => o.carrierName === draft.carrier)) patch({ carrier: null, carrierTotal: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.data]);
+
+  const canSkip = !state.loading && (Boolean(state.error) || Boolean(state.data?.manualRequired) || options.length === 0);
+
+  return (
+    <div className="space-y-5">
+      <Card>
+        <CardBody className="space-y-4">
+          <div>
+            <h2 className="text-xl font-bold">Choose a carrier</h2>
+            <p className="text-sm text-muted">
+              Prices for {draft.weight} kg from {draft.sender.city} to {draft.receiver.city}, {regionName(draft.receiver.country)}.
+            </p>
+          </div>
+
+          {state.loading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <p className="text-sm text-muted">Getting live carrier rates. This can take a few seconds.</p>
+            </div>
+          ) : null}
+
+          {state.error ? (
+            <Alert tone="warning" title="Could not get rates">
+              <p>{state.error}</p>
+              <Button className="mt-3" size="sm" variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
+                Try again
+              </Button>
+            </Alert>
+          ) : null}
+
+          {state.data?.manualRequired ? (
+            <Alert tone="info" title="Heavy shipment">
+              Parcels this heavy are priced individually. Continue, and we will send you the price after your package is weighed at our office.
+            </Alert>
+          ) : null}
+          {state.data && !state.data.manualRequired && options.length === 0 ? (
+            <Alert tone="warning">No carrier rates were found for this route. You can still continue and we will quote you after your package is weighed.</Alert>
+          ) : null}
+
+          {options.length > 0 ? (
+            <div role="radiogroup" aria-label="Carrier" className="space-y-3">
+              {options.map((o) => {
+                const on = draft.carrier === o.carrierName;
+                return (
+                  <button
+                    key={o.rateId}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    onClick={() => {
+                      setPickError(null);
+                      patch({ carrier: o.carrierName, carrierTotal: o.total });
+                    }}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-4 rounded-2xl border p-4 text-left transition",
+                      on ? "border-ink bg-ink/[0.03] ring-1 ring-ink" : "border-line-strong hover:border-ink",
+                    )}
+                  >
+                    <span className="flex min-w-0 items-center gap-3">
+                      {o.carrierLogo ? <img src={o.carrierLogo} alt="" className="size-9 shrink-0 rounded-sm object-contain" loading="lazy" /> : null}
+                      <span className="min-w-0">
+                        <span className="block truncate font-bold">{o.carrierName}</span>
+                        {o.deliveryTime ? <span className="block text-xs text-muted">{o.deliveryTime}</span> : null}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-lg font-bold font-mono tabular-nums">{formatNaira(o.total)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          {pickError ? <p className="text-xs font-medium text-[var(--color-danger)]">{pickError}</p> : null}
+
+          {options.length > 0 ? (
+            <Alert tone="warning" title="If the weight is different">
+              This price uses the {draft.weight} kg you entered. When we weigh your package at our office, if it is heavier you will be asked to pay the additional fee before it ships. If it weighs the same or less, you pay nothing more.
+            </Alert>
+          ) : null}
+        </CardBody>
+      </Card>
+
+      <div className="flex items-center justify-between">
+        <Button variant="secondary" onClick={onBack}>
+          Back
+        </Button>
+        <Button
+          size="lg"
+          disabled={state.loading}
+          onClick={() => {
+            if (options.length > 0 && !draft.carrier && !canSkip) {
+              setPickError("Choose a carrier to continue");
+              return;
+            }
+            onNext();
+          }}
+        >
+          Continue
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Step 4: review ───────────────────────────────────────────────────── */
 
 function ReviewStep({
@@ -726,6 +927,16 @@ function ReviewStep({
   const countryLabel = draft.receiver.country ? regionName(draft.receiver.country) : undefined;
   return (
     <div className="space-y-5">
+      {international ? (
+        <Alert tone="info" title={draft.carrier ? `Shipping with ${draft.carrier}${draft.carrierTotal ? `: ${formatNaira(draft.carrierTotal)}` : ""}` : "You can pay straight away"}>
+          {draft.carrier
+            ? draft.method === "pickup"
+              ? "After you create the shipment you pay the rider's pickup fee, then pay for shipping on the next page. "
+              : "After you create the shipment you go straight to paying for shipping. "
+            : "After you submit, you will see the carrier prices and can pay right away. "}
+          The price uses the weight you entered ({draft.weight || "?"} kg). When we weigh your package at our office, if the weight is different and higher, you will be asked to pay the additional fee before it ships.
+        </Alert>
+      ) : null}
       <Card>
         <CardBody className="space-y-4 text-sm">
           <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Review your shipment</h2>
@@ -783,7 +994,11 @@ function ReviewStep({
           Back
         </Button>
         <Button size="lg" onClick={onSubmit} loading={submitting}>
-          {draft.method === "pickup" ? "Create shipment and pay pickup fee" : "Create shipment"}
+          {draft.method === "pickup"
+            ? "Create shipment and pay pickup fee"
+            : international && draft.carrier
+              ? "Create shipment and pay for shipping"
+              : "Create shipment"}
         </Button>
       </div>
     </div>

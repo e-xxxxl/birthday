@@ -15,7 +15,20 @@ import type { RateEstimate, ShippingConfig } from "@/types/shipping";
 export function QuotePage() {
   useDocumentTitle("International shipping quote");
   const { data: config } = useAsync(() => http.get<ShippingConfig>("/api/shipments/config"), []);
-  const [form, setForm] = useState({ country: "", state: "", city: "", zip: "", weight: "", length: "", width: "", height: "" });
+  const [form, setForm] = useState({
+    fromCountry: "NG",
+    fromState: "",
+    fromCity: "",
+    fromZip: "",
+    country: "",
+    state: "",
+    city: "",
+    zip: "",
+    weight: "",
+    length: "",
+    width: "",
+    height: "",
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +37,9 @@ export function QuotePage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const next: Record<string, string> = {};
+    if (!form.fromCountry) next.fromCountry = "Choose a country";
+    if (form.fromState.trim().length < 2) next.fromState = "Enter the state or region";
+    if (form.fromCity.trim().length < 2) next.fromCity = "Enter the city";
     if (!form.country) next.country = "Choose a country";
     if (form.city.trim().length < 2) next.city = "Enter the city";
     if (form.state.trim().length < 2) next.state = "Enter the state or region";
@@ -39,6 +55,7 @@ export function QuotePage() {
       setResult(
         await http.post<RateEstimate>("/api/shipments/estimate", {
           shipmentType: "international",
+          from: { country: form.fromCountry, state: form.fromState.trim(), city: form.fromCity.trim(), zip: form.fromZip.trim() || undefined },
           country: form.country,
           state: form.state.trim(),
           city: form.city.trim(),
@@ -66,14 +83,27 @@ export function QuotePage() {
         <Card>
           <CardBody>
             <form onSubmit={submit} className="space-y-4" noValidate>
-              <LocationPicker
-                value={{ country: form.country, state: form.state, city: form.city }}
-                onChange={(p) => setForm({ ...form, country: p.country, state: p.state, city: p.city })}
-                excludeCountries={["NG"]}
-                stacked
-                errors={{ country: errors.country, state: errors.state, city: errors.city }}
-              />
-              <Input label="Postcode (optional)" value={form.zip} onChange={set("zip")} hint="Some countries need it to price the delivery" containerClassName="max-w-xs" />
+              <div className="space-y-4">
+                <h2 className="rule-label">Shipping from</h2>
+                <LocationPicker
+                  value={{ country: form.fromCountry, state: form.fromState, city: form.fromCity }}
+                  onChange={(p) => setForm({ ...form, fromCountry: p.country, fromState: p.state, fromCity: p.city })}
+                  stacked
+                  errors={{ country: errors.fromCountry, state: errors.fromState, city: errors.fromCity }}
+                />
+                <Input label="Postcode (optional)" value={form.fromZip} onChange={set("fromZip")} containerClassName="max-w-xs" />
+              </div>
+              <div className="space-y-4 border-t border-line pt-5">
+                <h2 className="rule-label">Shipping to</h2>
+                <LocationPicker
+                  value={{ country: form.country, state: form.state, city: form.city }}
+                  onChange={(p) => setForm({ ...form, country: p.country, state: p.state, city: p.city })}
+                  excludeCountries={form.fromCountry ? [form.fromCountry] : []}
+                  stacked
+                  errors={{ country: errors.country, state: errors.state, city: errors.city }}
+                />
+                <Input label="Postcode (optional)" value={form.zip} onChange={set("zip")} hint="Some countries need it to price the delivery" containerClassName="max-w-xs" />
+              </div>
               <Input label="Weight (kg)" required type="number" min="0.1" step="0.1" value={form.weight} onChange={set("weight")} error={errors.weight} hint="We weigh it at our office, and bill by the next whole kilogram." />
               <div className="grid grid-cols-3 gap-3">
                 <Input label="Length (cm)" type="number" min="0" value={form.length} onChange={set("length")} />

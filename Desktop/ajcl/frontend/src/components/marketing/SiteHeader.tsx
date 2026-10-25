@@ -24,6 +24,7 @@ type MenuItem = { label: string; href: string; icon: IconName; blurb: string; ex
 
 /** Reach us. Kept in a "More" menu so the main links always fit on one line. */
 const MORE_LINKS: MenuItem[] = [
+  { label: "Blog", href: "/blog", icon: "tag", blurb: "News and updates" },
   { label: "Contact Us", href: "/contact", icon: "mail", blurb: "Questions, quotes and support" },
   { label: "Call us", href: site.contact.phoneHref, icon: "phone", blurb: site.contact.phone, external: true },
   { label: "WhatsApp", href: site.contact.whatsappHref, icon: "whatsapp", blurb: "Chat with our team", external: true },
@@ -191,7 +192,7 @@ export function SiteHeader() {
               l.menu === "services" ? (
                 <NavMenu key={l.href + l.label} label={l.label} href={l.href} active={inServices} items={SERVICE_LINKS} width="w-[26rem]" open={menu} setOpen={setMenu} />
               ) : l.menu === "more" ? (
-                <NavMenu key={l.href + l.label} label={l.label} href={l.href} active={pathname.startsWith("/contact")} items={MORE_LINKS} width="w-80" open={more} setOpen={setMore} />
+                <NavMenu key={l.href + l.label} label={l.label} href={l.href} active={pathname.startsWith("/contact") || pathname.startsWith("/blog")} items={MORE_LINKS} width="w-80" open={more} setOpen={setMore} />
               ) : (
                 <Link
                   key={l.href}

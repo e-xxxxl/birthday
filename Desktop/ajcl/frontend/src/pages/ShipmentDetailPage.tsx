@@ -21,6 +21,11 @@ import { formatDateTime, formatNaira } from "@/lib/utils";
 import { SHIPMENT_STATUS_META } from "@/config/shipping";
 import type { Shipment, ShippingConfig } from "@/types/shipping";
 
+/** What we tell an international customer who pays before the parcel is weighed. */
+export function weightNotice(declaredKg: number): string {
+  return `This price is based on the ${declaredKg} kg you entered. When we weigh your package at our office, if it is heavier you will be asked to pay the additional fee before it ships. If it weighs the same or less, you pay nothing more.`;
+}
+
 export function ShipmentDetailPage() {
   const { reference = "" } = useParams();
   useDocumentTitle(`Shipment ${reference}`);
@@ -40,6 +45,15 @@ export function ShipmentDetailPage() {
   const meta = SHIPMENT_STATUS_META[s.status];
   const international = s.shipmentType === "international";
   const pickupFee = s.handover.pickupFee;
+  // A carrier picked in the wizard is already selected here.
+  let chosenInWizard: string | undefined;
+  try {
+    const name = sessionStorage.getItem(`ajc:carrier:${s.reference}`);
+    chosenInWizard = s.prepay?.available ? s.quote.options.find((o) => o.carrierName === name)?.rateId : undefined;
+  } catch {
+    /* ignore */
+  }
+  const pick = selected ?? chosenInWizard ?? null;
 
   async function payPickup() {
     if (!s.handover.pickupBookingReference) return;
@@ -56,7 +70,7 @@ export function ShipmentDetailPage() {
   }
 
   async function payShipping() {
-    const rateId = selected ?? (s.quote.options.length === 1 ? s.quote.options[0].rateId : null);
+    const rateId = pick ?? (s.quote.options.length === 1 ? s.quote.options[0].rateId : null);
     if (!rateId) {
       toast.error("Choose a delivery option first");
       return;
@@ -155,7 +169,60 @@ export function ShipmentDetailPage() {
             </Card>
           ) : null}
 
-          {s.status === "quote_sent" ? (
+          {s.prepay?.available ? (
+            <Card>
+              <CardBody className="space-y-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Pay for shipping now</h2>
+                  <p className="text-sm text-muted">Choose a carrier and pay straight away. You do not need to wait for us to weigh your package.</p>
+                </div>
+                <div role="radiogroup" className="space-y-3">
+                  {s.quote.options.map((o) => (
+                    <QuoteOptionCard
+                      key={o.rateId}
+                      option={o}
+                      selected={(pick ?? (s.quote.options.length === 1 ? o.rateId : null)) === o.rateId}
+                      onSelect={() => setSelected(o.rateId)}
+                    />
+                  ))}
+                </div>
+                <Alert tone="warning" title="If the weight is different">
+                  {weightNotice(s.parcel.estimatedWeightKg)}
+                </Alert>
+                {config ? <Alert tone="warning">{config.dutiesNotice}</Alert> : null}
+                <DisclaimerNotice paragraphs={config?.disclaimerParagraphs} />
+                <Button size="lg" onClick={payShipping} loading={busy === "shipping"}>
+                  Pay shipping now
+                </Button>
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {s.prepay?.paid && s.status !== "quote_sent" && !["paid", "booked", "in_transit", "delivered", "booking_failed", "failed", "cancelled"].includes(s.status) ? (
+            <Alert tone="success" title={`Shipping paid: ${formatNaira(s.shippingPayment?.amount ?? 0)}`}>
+              {weightNotice(s.parcel.estimatedWeightKg)}
+            </Alert>
+          ) : null}
+
+          {s.status === "quote_sent" && s.prepay?.paid ? (
+            <Card>
+              <CardBody className="space-y-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Additional fee to ship</h2>
+                  <p className="text-sm text-muted">
+                    You entered {s.parcel.estimatedWeightKg} kg. We weighed your package at {s.confirmed?.weightKg} kg (billed as {s.quote.billedWeightKg} kg).
+                  </p>
+                </div>
+                <p className="text-3xl font-bold font-mono tabular-nums">{formatNaira(s.prepay.additionalDue)}</p>
+                <p className="text-sm text-muted">You already paid {formatNaira(s.shippingPayment?.amount ?? 0)}. This is only the difference for the extra weight.</p>
+                <Button size="lg" onClick={payShipping} loading={busy === "shipping"}>
+                  Pay the additional fee
+                </Button>
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {s.status === "quote_sent" && !s.prepay?.paid ? (
             <Card>
               <CardBody className="space-y-4">
                 <div>

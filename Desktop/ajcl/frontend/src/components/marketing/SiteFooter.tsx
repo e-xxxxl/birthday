@@ -57,6 +57,7 @@ export function SiteFooter() {
               { label: "About us", href: "/about" },
               { label: "All services", href: "/services" },
               { label: "Our fleet", href: "/#fleet" },
+              { label: "Blog", href: "/blog" },
               { label: "Contact", href: "/contact" },
               { label: "Privacy Policy", href: "/privacy" },
               { label: "Terms & Conditions", href: "/terms" },

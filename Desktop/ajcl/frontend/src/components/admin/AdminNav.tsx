@@ -26,6 +26,7 @@ export function AdminNav() {
             ...baseItems,
             { label: "Shipping", href: "/admin/shipping" },
             { label: "Website", href: "/admin/site" },
+            { label: "Blog", href: "/admin/blog" },
             { label: "Team", href: "/admin/team" },
           ]
         : baseItems;

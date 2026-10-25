@@ -47,10 +47,11 @@ export function AccountMenu() {
           ]
         : [
             { label: "Dashboard", href: "/dashboard" },
-            { label: "My bookings", href: "/dashboard/bookings" },
-            { label: "My shipments", href: "/dashboard/shipments" },
+            { label: "Rides", href: "/dashboard/bookings" },
+            { label: "Shipments", href: "/dashboard/shipments" },
             ...(user.partner ? [{ label: "Account statement", href: "/dashboard/account" }] : []),
-            { label: "New booking", href: "/send" },
+            { label: "Book a ride", href: "/book" },
+            { label: "New shipment", href: "/send" },
           ];
 
   return (

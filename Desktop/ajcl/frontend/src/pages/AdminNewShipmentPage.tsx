@@ -39,6 +39,7 @@ export function AdminNewShipmentPage() {
   function switchType(next: Type) {
     setType(next);
     setReceiver(blankParty(next === "interstate" ? "NG" : ""));
+    setSender(blankParty(next === "interstate" ? "NG" : ""));
     setErrors({});
   }
 
@@ -52,6 +53,7 @@ export function AdminNewShipmentPage() {
     need("s-line1", sender.line1, "Enter the street address");
     need("s-city", sender.city);
     need("s-state", sender.state);
+    if (international && !sender.country) e["s-country"] = "Choose a country";
     need("r-name", receiver.name);
     if (!toInternationalPhone(receiver.phone, receiver.country, { strict: true })) e["r-phone"] = phoneProblem(receiver.country);
     need("r-line1", receiver.line1, "Enter the street address");
@@ -129,7 +131,7 @@ export function AdminNewShipmentPage() {
         </CardBody>
       </Card>
 
-      <PartyFields prefix="s" title="Sender" party={sender} errors={errors} onChange={(p) => setSender({ ...sender, ...p })} lockedCountry="NG" hideCountry />
+      <PartyFields prefix="s" title="Sender" party={sender} errors={errors} onChange={(p) => setSender({ ...sender, ...p })} lockedCountry={international ? undefined : "NG"} hideCountry={!international} />
       <PartyFields
         prefix="r"
         title="Receiver"

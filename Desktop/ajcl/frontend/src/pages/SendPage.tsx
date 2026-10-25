@@ -8,7 +8,7 @@ const OPTIONS: { href: string; title: string; where: string; body: string; image
   {
     href: "/book",
     title: "Local delivery",
-    where: "Within your city",
+    where: "Within Lagos, Lagos to Ibadan, Abeokuta and environs",
     body: "A rider, van or truck takes it from pickup to the door. You see the fare, pay, and follow it live.",
     image: "scooter",
     icon: "bike",

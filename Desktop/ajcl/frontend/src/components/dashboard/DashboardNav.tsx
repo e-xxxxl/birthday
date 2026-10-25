@@ -5,8 +5,8 @@ import { useAuth } from "@/components/providers/AuthProvider";
 
 const baseItems: { label: string; href: string; exact?: boolean }[] = [
   { label: "Overview", href: "/dashboard", exact: true },
-  { label: "My bookings", href: "/dashboard/bookings" },
-  { label: "My shipments", href: "/dashboard/shipments" },
+  { label: "Rides", href: "/dashboard/bookings" },
+  { label: "Shipments", href: "/dashboard/shipments" },
 ];
 
 export function DashboardNav({ className }: { className?: string }) {
@@ -33,12 +33,14 @@ export function DashboardNav({ className }: { className?: string }) {
           </Link>
         );
       })}
-      <Link
-        href="/send"
-        className="shrink-0 rounded-sm bg-accent px-3.5 py-1.5 text-sm font-bold text-ink transition hover:bg-[var(--color-accent-dark)]"
-      >
-        New booking
-      </Link>
+      <span className="ml-auto flex shrink-0 gap-1.5 pl-2">
+        <Link href="/book" className="rounded-sm border border-line-strong px-3.5 py-1.5 text-sm font-bold text-ink transition hover:border-ink">
+          Book a ride
+        </Link>
+        <Link href="/send" className="rounded-sm bg-accent px-3.5 py-1.5 text-sm font-bold text-ink transition hover:bg-[var(--color-accent-dark)]">
+          New shipment
+        </Link>
+      </span>
     </nav>
   );
 }

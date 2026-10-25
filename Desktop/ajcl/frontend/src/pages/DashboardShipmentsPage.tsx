@@ -11,18 +11,18 @@ import { regionName as countryName } from "@/lib/utils";
 import type { Shipment } from "@/types/shipping";
 
 export function DashboardShipmentsPage() {
-  useDocumentTitle("My shipments");
+  useDocumentTitle("Shipments");
   const { data, loading, error } = useAsync(() => http.get<{ shipments: Shipment[] }>("/api/shipments"), []);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold sm:text-4xl">My shipments</h1>
+        <h1 className="text-2xl font-bold sm:text-4xl">Shipments</h1>
         <Button href="/send" size="sm" variant="accent">
-          New booking
+          New shipment
         </Button>
       </div>
-      <p className="text-sm text-muted">Interstate and international shipments. Local deliveries are under My bookings.</p>
+      <p className="text-sm text-muted">Interstate and international. Same-day rides are under Rides.</p>
 
       {loading ? <LoadingBlock /> : null}
       {error ? <Alert tone="danger">{error}</Alert> : null}
@@ -31,8 +31,8 @@ export function DashboardShipmentsPage() {
           <CardBody className="py-12 text-center">
             <p className="font-semibold">No shipments yet</p>
             <p className="mt-1 text-sm text-muted">Send a package to another state or abroad.</p>
-            <Button href="/send/interstate" className="mt-5">
-              Ship a package
+            <Button href="/send" className="mt-5">
+              New shipment
             </Button>
           </CardBody>
         </Card>

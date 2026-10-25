@@ -1,5 +1,5 @@
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useBookingWizard } from "@/components/booking/BookingWizardContext";
 import { RouteSummary } from "@/components/booking/RouteSummary";
 import { PriceBreakdown } from "@/components/booking/PriceBreakdown";
@@ -12,6 +12,7 @@ import type { WizardStepProps } from "@/components/booking/BookingWizard";
 
 export function ReviewStep({ goNext, goBack, goTo }: WizardStepProps) {
   const { draft, quote, selectedVehicle } = useBookingWizard();
+  const [confirmed, setConfirmed] = useState(false);
 
   const priced = useMemo(
     () => quote?.vehicles.find((v) => v.vehicle.slug === draft.vehicleSlug),
@@ -159,7 +160,17 @@ export function ReviewStep({ goNext, goBack, goTo }: WizardStepProps) {
         ) : null}
 
         <div className="mt-4 flex flex-col gap-2">
-          <Button size="lg" fullWidth disabled={missing} onClick={goNext}>
+          <label className="flex items-start gap-3 rounded-2xl bg-surface p-3 text-sm">
+            <input type="checkbox" required className="mt-1 size-4 shrink-0" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
+            <span>
+              I confirm these details are correct and I agree to the{" "}
+              <a href="/terms" target="_blank" rel="noreferrer" className="font-semibold underline">
+                Terms
+              </a>
+              <span className="ml-0.5 text-[var(--color-danger)]">*</span>
+            </span>
+          </label>
+          <Button size="lg" fullWidth disabled={missing || !confirmed} onClick={goNext}>
             Continue to payment
           </Button>
           <Button variant="secondary" fullWidth onClick={goBack}>

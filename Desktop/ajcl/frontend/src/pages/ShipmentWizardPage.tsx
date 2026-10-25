@@ -50,6 +50,8 @@ type Draft = {
   /** International: the carrier picked on the Rates step, and the price shown for it. */
   carrier: string | null;
   carrierTotal: number | null;
+  /** International pickup: the rider's fee for the chosen vehicle, shown in the final total. */
+  pickupFee: number | null;
 };
 
 export const blankParty = (country: string): PartyForm => ({
@@ -90,7 +92,8 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
 
   const [draft, setDraft] = useState<Draft>(() => {
     const base: Draft = {
-      sender: { ...blankParty("NG"), name: user?.fullName ?? "", phone: user?.phone ?? "", email: user?.email ?? "" },
+      // An international sender can be anywhere, so the country is chosen. Interstate always starts in Nigeria.
+      sender: { ...blankParty(international ? "" : "NG"), name: user?.fullName ?? "", phone: user?.phone ?? "", email: user?.email ?? "" },
       receiver: blankParty(international ? "" : "NG"),
       description: "",
       weight: "",
@@ -108,6 +111,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
       agreed: false,
       carrier: null,
       carrierTotal: null,
+      pickupFee: null,
     };
     try {
       const raw = sessionStorage.getItem(storageKey);
@@ -162,6 +166,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
     req("s-line1", draft.sender.line1, "Enter the street address");
     req("s-city", draft.sender.city);
     req("s-state", draft.sender.state);
+    if (international && !draft.sender.country) e["s-country"] = "Choose a country";
     req("r-name", draft.receiver.name);
     if (!toInternationalPhone(draft.receiver.phone, draft.receiver.country, { strict: true })) e["r-phone"] = phoneProblem(draft.receiver.country);
     req("r-line1", draft.receiver.line1, "Enter the street address");
@@ -170,6 +175,11 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
     if (international && !draft.receiver.country) e["r-country"] = "Choose a country";
     if (international && !draft.receiver.zip.trim()) e["r-zip"] = "Enter the postcode";
     if (draft.receiver.email && !/^\S+@\S+\.\S+$/.test(draft.receiver.email)) e["r-email"] = "Enter a valid email";
+    if (international) {
+      if (!draft.sender.email.trim()) e["s-email"] = "Enter the sender's email";
+      else if (!/^\S+@\S+\.\S+$/.test(draft.sender.email.trim())) e["s-email"] = "Enter a valid email";
+      if (!draft.receiver.email.trim()) e["r-email"] = "Enter the receiver's email";
+    }
     if (draft.description.trim().length < 3) e.description = "Describe the package";
     const w = Number(draft.weight);
     if (!(w >= 0.01)) e.weight = "Enter the estimated weight in kg";
@@ -282,6 +292,22 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
           /* ignore */
         }
       }
+      // International with a carrier chosen: ONE payment for the pickup fee (if any) and the chosen carrier's price.
+      if (international && draft.carrier && s.prepay?.available) {
+        const option = s.quote.options.find((o) => o.carrierName === draft.carrier);
+        if (option && Math.abs(option.total - (draft.carrierTotal ?? option.total)) < 1) {
+          try {
+            const pay = await http.post<{ authorizationUrl: string }>(`/api/shipments/${s.reference}/pay`, {
+              rateId: option.rateId,
+              includePickupFee: s.handover.method === "pickup" ? true : undefined,
+            });
+            window.location.href = pay.authorizationUrl;
+            return;
+          } catch {
+            /* fall through: the pickup fee, then the shipment page, offer it again */
+          }
+        }
+      }
       if (s.handover.method === "pickup" && s.handover.pickupBookingReference) {
         // Straight on to paying the pickup fee. If that fails the shipment page offers it again.
         try {
@@ -292,19 +318,6 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
           return;
         } catch {
           /* fall through to the shipment page */
-        }
-      }
-      // International drop-off with a carrier already chosen: go straight to paying for shipping, if the price still matches.
-      if (international && draft.carrier && s.prepay?.available) {
-        const option = s.quote.options.find((o) => o.carrierName === draft.carrier);
-        if (option && Math.abs(option.total - (draft.carrierTotal ?? option.total)) < 1) {
-          try {
-            const pay = await http.post<{ authorizationUrl: string }>(`/api/shipments/${s.reference}/pay`, { rateId: option.rateId });
-            window.location.href = pay.authorizationUrl;
-            return;
-          } catch {
-            /* fall through to the shipment page */
-          }
         }
       }
       navigate(`/dashboard/shipments/${s.reference}`);
@@ -331,7 +344,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
           {steps.map((s, i) => (
             <li key={s} className="flex-1">
               <div className={cn("h-1.5 rounded-sm", i <= stepIndex ? "bg-ink" : "bg-line-strong")} />
-              <p className={cn("mt-1.5 text-xs font-semibold", i === stepIndex ? "text-ink" : "text-muted")}>
+              <p className={cn("mt-1.5 text-xs font-semibold", i === stepIndex ? "text-ink" : "hidden text-muted sm:block")}>
                 {i + 1}. {s}
               </p>
             </li>
@@ -402,6 +415,7 @@ export function PartyFields({
   excludeCountries,
   zipRequired,
   hideCountry,
+  emailRequired,
 }: {
   prefix: "s" | "r";
   title: string;
@@ -415,6 +429,8 @@ export function PartyFields({
   zipRequired?: boolean;
   /** Do not show the (fixed) country. */
   hideCountry?: boolean;
+  /** The email is compulsory (international: the carrier and both people are written to). */
+  emailRequired?: boolean;
 }) {
   const e = (k: string) => errors[`${prefix}-${k}`];
   return (
@@ -424,7 +440,7 @@ export function PartyFields({
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="Full name" required value={party.name} onChange={(ev) => onChange({ name: ev.target.value })} error={e("name")} autoComplete="off" />
           <PhoneField label="Phone" required value={party.phone} country={party.country} onChange={(phone) => onChange({ phone })} error={e("phone")} />
-          <Input label="Email" type="email" value={party.email} onChange={(ev) => onChange({ email: ev.target.value })} error={e("email")} hint="Optional" containerClassName="sm:col-span-2" />
+          <Input label="Email" type="email" required={emailRequired} value={party.email} onChange={(ev) => onChange({ email: ev.target.value })} error={e("email")} hint={emailRequired ? undefined : "Optional"} containerClassName="sm:col-span-2" />
         </div>
         <LocationPicker
           value={{ country: party.country, state: party.state, city: party.city }}
@@ -462,8 +478,8 @@ function PackageStep({
         party={draft.sender}
         errors={errors}
         onChange={(p) => patchParty("sender", p)}
-        lockedCountry="NG"
-        hideCountry={international}
+        lockedCountry={international ? undefined : "NG"}
+        emailRequired={international}
       />
       <PartyFields
         prefix="r"
@@ -474,6 +490,7 @@ function PackageStep({
         lockedCountry={international ? undefined : "NG"}
         excludeCountries={international ? ["NG"] : undefined}
         zipRequired={international}
+        emailRequired={international}
       />
       <Card>
         <CardBody className="space-y-4">
@@ -490,7 +507,7 @@ function PackageStep({
           </div>
         </CardBody>
       </Card>
-      <div className="flex justify-end">
+      <div className="flex justify-end [&>*]:w-full sm:[&>*]:w-auto">
         <Button size="lg" onClick={onNext}>
           Continue
         </Button>
@@ -549,7 +566,7 @@ function ContentsStep({
           ) : null}
         </CardBody>
       </Card>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between [&>*]:w-full sm:[&>*]:w-auto">
         <Button variant="secondary" onClick={onBack}>
           Back
         </Button>
@@ -609,6 +626,13 @@ function HandoverStep({
   }, [draft.method, locKey]);
 
   const today = new Date().toISOString().slice(0, 10);
+
+  // The fee for the vehicle the customer picked travels on to the review, where it is added to the carrier price.
+  const feeNow = draft.method === "pickup" ? quote?.vehicles.find((v) => v.vehicle.slug === draft.vehicleSlug)?.price.total ?? null : null;
+  useEffect(() => {
+    if (feeNow !== draft.pickupFee) patch({ pickupFee: feeNow });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feeNow]);
 
   return (
     <div className="space-y-5">
@@ -732,7 +756,7 @@ function HandoverStep({
         </>
       ) : null}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between [&>*]:w-full sm:[&>*]:w-auto">
         <Button variant="secondary" onClick={onBack}>
           Back
         </Button>
@@ -752,12 +776,6 @@ function RatesStep({ draft, patch, onBack, onNext }: StepCommon & { onBack: () =
   const hasDims = draft.length && draft.width && draft.height;
   const body = {
     shipmentType: "international",
-    from: {
-      country: draft.sender.country,
-      state: draft.sender.state,
-      city: draft.sender.city,
-      zip: draft.sender.zip.trim() || undefined,
-    },
     country: draft.receiver.country,
     state: draft.receiver.state,
     city: draft.receiver.city,
@@ -809,7 +827,7 @@ function RatesStep({ draft, patch, onBack, onNext }: StepCommon & { onBack: () =
           <div>
             <h2 className="text-xl font-bold">Choose a carrier</h2>
             <p className="text-sm text-muted">
-              Prices for {draft.weight} kg from {draft.sender.city} to {draft.receiver.city}, {regionName(draft.receiver.country)}.
+              Prices for {draft.weight} kg to {draft.receiver.city}, {regionName(draft.receiver.country)}.
             </p>
           </div>
 
@@ -881,7 +899,7 @@ function RatesStep({ draft, patch, onBack, onNext }: StepCommon & { onBack: () =
         </CardBody>
       </Card>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between [&>*]:w-full sm:[&>*]:w-auto">
         <Button variant="secondary" onClick={onBack}>
           Back
         </Button>
@@ -927,14 +945,36 @@ function ReviewStep({
   const countryLabel = draft.receiver.country ? regionName(draft.receiver.country) : undefined;
   return (
     <div className="space-y-5">
-      {international ? (
-        <Alert tone="info" title={draft.carrier ? `Shipping with ${draft.carrier}${draft.carrierTotal ? `: ${formatNaira(draft.carrierTotal)}` : ""}` : "You can pay straight away"}>
-          {draft.carrier
-            ? draft.method === "pickup"
-              ? "After you create the shipment you pay the rider's pickup fee, then pay for shipping on the next page. "
-              : "After you create the shipment you go straight to paying for shipping. "
-            : "After you submit, you will see the carrier prices and can pay right away. "}
-          The price uses the weight you entered ({draft.weight || "?"} kg). When we weigh your package at our office, if the weight is different and higher, you will be asked to pay the additional fee before it ships.
+      {international && draft.carrier ? (
+        <Card>
+          <CardBody className="space-y-3 text-sm">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted">What you pay now</h2>
+            <dl className="divide-y divide-line">
+              {draft.method === "pickup" ? (
+                <div className="flex items-baseline justify-between gap-4 py-2">
+                  <dt>Rider pickup fee</dt>
+                  <dd className="font-mono font-bold tabular-nums">{draft.pickupFee != null ? formatNaira(draft.pickupFee) : "—"}</dd>
+                </div>
+              ) : null}
+              <div className="flex items-baseline justify-between gap-4 py-2">
+                <dt>Shipping with {draft.carrier}</dt>
+                <dd className="font-mono font-bold tabular-nums">{draft.carrierTotal != null ? formatNaira(draft.carrierTotal) : "—"}</dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 py-3 text-base">
+                <dt className="font-bold">Total</dt>
+                <dd className="font-mono text-xl font-bold tabular-nums">
+                  {formatNaira((draft.method === "pickup" ? draft.pickupFee ?? 0 : 0) + (draft.carrierTotal ?? 0))}
+                </dd>
+              </div>
+            </dl>
+            <p className="text-xs text-muted">
+              The price uses the weight you entered ({draft.weight || "?"} kg). When we weigh your package at our office, if it is heavier you will be asked to pay the additional fee before it ships. If it weighs the same or less, you pay nothing more.
+            </p>
+          </CardBody>
+        </Card>
+      ) : international ? (
+        <Alert tone="info" title="You can pay straight away">
+          After you submit, you will see the carrier prices and can pay right away. When we weigh your package at our office, if the weight is different and higher, you will be asked to pay the additional fee before it ships.
         </Alert>
       ) : null}
       <Card>
@@ -977,11 +1017,13 @@ function ReviewStep({
             </div>
           ) : null}
           <label className="flex items-start gap-3 text-sm">
-            <input type="checkbox" className="mt-1 size-4" checked={draft.agreed} onChange={(e) => patch({ agreed: e.target.checked })} />
+            <input type="checkbox" required className="mt-1 size-4 shrink-0" checked={draft.agreed} onChange={(e) => patch({ agreed: e.target.checked })} />
             <span>
               {draft.method === "pickup"
-                ? "I have read the refund policy and I am ready to pay the pickup fee."
+                ? "I have read the refund policy and I am ready to pay."
                 : "I understand I need to bring the package to the office and quote my reference."}
+              {international ? " I confirm the details are correct and I accept the terms, including paying any additional fee if the weight is higher." : ""}
+              <span className="ml-0.5 text-[var(--color-danger)]">*</span>
             </span>
           </label>
           {errors.agreed ? <p className="text-xs font-medium text-[var(--color-danger)]">{errors.agreed}</p> : null}
@@ -989,15 +1031,15 @@ function ReviewStep({
       </Card>
       {submitError ? <Alert tone="danger">{submitError}</Alert> : null}
       <DisclaimerNotice paragraphs={config?.disclaimerParagraphs} />
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between [&>*]:w-full sm:[&>*]:w-auto">
         <Button variant="secondary" onClick={onBack} disabled={submitting}>
           Back
         </Button>
-        <Button size="lg" onClick={onSubmit} loading={submitting}>
-          {draft.method === "pickup"
-            ? "Create shipment and pay pickup fee"
-            : international && draft.carrier
-              ? "Create shipment and pay for shipping"
+        <Button size="lg" onClick={onSubmit} loading={submitting} disabled={!draft.agreed}>
+          {international && draft.carrier
+            ? `Pay ${formatNaira((draft.method === "pickup" ? draft.pickupFee ?? 0 : 0) + (draft.carrierTotal ?? 0))}`
+            : draft.method === "pickup"
+              ? "Create shipment and pay pickup fee"
               : "Create shipment"}
         </Button>
       </div>

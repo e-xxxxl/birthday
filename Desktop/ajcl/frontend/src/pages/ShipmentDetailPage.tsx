@@ -69,7 +69,7 @@ export function ShipmentDetailPage() {
     }
   }
 
-  async function payShipping() {
+  async function payShipping(bundlePickup = false) {
     const rateId = pick ?? (s.quote.options.length === 1 ? s.quote.options[0].rateId : null);
     if (!rateId) {
       toast.error("Choose a delivery option first");
@@ -77,7 +77,7 @@ export function ShipmentDetailPage() {
     }
     setBusy("shipping");
     try {
-      const res = await http.post<{ authorizationUrl: string }>(`/api/shipments/${s.reference}/pay`, { rateId });
+      const res = await http.post<{ authorizationUrl: string }>(`/api/shipments/${s.reference}/pay`, { rateId, includePickupFee: bundlePickup ? true : undefined });
       window.location.href = res.authorizationUrl;
     } catch (err) {
       toast.error("Could not start payment", err instanceof HttpError ? err.message : undefined);
@@ -191,9 +191,15 @@ export function ShipmentDetailPage() {
                 </Alert>
                 {config ? <Alert tone="warning">{config.dutiesNotice}</Alert> : null}
                 <DisclaimerNotice paragraphs={config?.disclaimerParagraphs} />
-                <Button size="lg" onClick={payShipping} loading={busy === "shipping"}>
-                  Pay shipping now
-                </Button>
+                {s.status === "pickup_fee_pending" && pickupFee && !pickupFee.paid ? (
+                  <Button size="lg" onClick={() => payShipping(true)} loading={busy === "shipping"}>
+                    Pay pickup fee and shipping
+                  </Button>
+                ) : (
+                  <Button size="lg" onClick={() => payShipping()} loading={busy === "shipping"}>
+                    Pay shipping now
+                  </Button>
+                )}
               </CardBody>
             </Card>
           ) : null}
@@ -215,7 +221,7 @@ export function ShipmentDetailPage() {
                 </div>
                 <p className="text-3xl font-bold font-mono tabular-nums">{formatNaira(s.prepay.additionalDue)}</p>
                 <p className="text-sm text-muted">You already paid {formatNaira(s.shippingPayment?.amount ?? 0)}. This is only the difference for the extra weight.</p>
-                <Button size="lg" onClick={payShipping} loading={busy === "shipping"}>
+                <Button size="lg" onClick={() => payShipping()} loading={busy === "shipping"}>
                   Pay the additional fee
                 </Button>
               </CardBody>
@@ -244,7 +250,7 @@ export function ShipmentDetailPage() {
                 </div>
                 {international && config ? <Alert tone="warning">{config.dutiesNotice}</Alert> : null}
                 <DisclaimerNotice paragraphs={config?.disclaimerParagraphs} />
-                <Button size="lg" onClick={payShipping} loading={busy === "shipping"}>
+                <Button size="lg" onClick={() => payShipping()} loading={busy === "shipping"}>
                   Pay shipping total
                 </Button>
               </CardBody>

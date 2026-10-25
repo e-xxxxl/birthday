@@ -194,7 +194,7 @@ export function PaymentCallback() {
             Go to dashboard
           </Button>
           <Link href="/send" className="mt-1 text-xs font-semibold text-muted hover:text-ink">
-            Start a new booking
+            Start a new shipment
           </Link>
         </div>
       </CardBody>

@@ -31,6 +31,7 @@ export function SignupForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   const set = (key: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setValues((v) => ({ ...v, [key]: e.target.value }));
@@ -41,8 +42,9 @@ export function SignupForm() {
     setFormError(null);
 
     const parsed = signupSchema.safeParse(values);
-    if (!parsed.success) {
-      setErrors(formErrorsFrom(parsed.error.flatten().fieldErrors as Record<string, string[]>));
+    if (!parsed.success || !agreed) {
+      const found = parsed.success ? {} : formErrorsFrom(parsed.error.flatten().fieldErrors as Record<string, string[]>);
+      setErrors({ ...found, ...(agreed ? {} : { agreed: "You need to accept the Terms and Privacy Policy to create an account" }) });
       return;
     }
 
@@ -100,20 +102,37 @@ export function SignupForm() {
         autoComplete="new-password"
       />
 
-      <Button type="submit" fullWidth loading={loading}>
+      <div>
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            required
+            className="mt-1 size-4 shrink-0"
+            checked={agreed}
+            onChange={(e) => {
+              setAgreed(e.target.checked);
+              if (e.target.checked) setErrors((x) => ({ ...x, agreed: "" }));
+            }}
+            aria-invalid={Boolean(errors.agreed)}
+          />
+          <span>
+            I agree to the{" "}
+            <a href="/terms" target="_blank" rel="noreferrer" className="font-semibold underline hover:text-accent-dark">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" target="_blank" rel="noreferrer" className="font-semibold underline hover:text-accent-dark">
+              Privacy Policy
+            </a>
+            <span className="ml-0.5 text-[var(--color-danger)]">*</span>
+          </span>
+        </label>
+        {errors.agreed ? <p className="mt-1 text-xs font-medium text-[var(--color-danger)]">{errors.agreed}</p> : null}
+      </div>
+
+      <Button type="submit" fullWidth loading={loading} disabled={!agreed}>
         Create account
       </Button>
-      <p className="text-center text-xs text-muted">
-        By creating an account you agree to our{" "}
-        <a href="/terms" className="underline hover:text-ink">
-          Terms
-        </a>{" "}
-        and{" "}
-        <a href="/privacy" className="underline hover:text-ink">
-          Privacy Policy
-        </a>
-        .
-      </p>
     </form>
   );
 }

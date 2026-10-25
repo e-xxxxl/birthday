@@ -67,6 +67,8 @@ const EMPTY: Fields = { fullName: "", address: "", email: "", phone: "", destina
 export function CargoEnquiryForm({ service }: { service: "air" | "sea" | "express" }) {
   const [form, setForm] = useState<Fields>(EMPTY);
   const [website, setWebsite] = useState(""); // hidden honeypot
+  const [ack, setAck] = useState(false);
+  const [ackError, setAckError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -93,12 +95,15 @@ export function CargoEnquiryForm({ service }: { service: "air" | "sea" | "expres
     setFailure(null);
     const e = validate();
     setErrors(e);
-    if (Object.keys(e).length > 0) return;
+    const needsAck = service !== "express" && !ack;
+    setAckError(needsAck ? "Please tick the box to confirm you have read this" : null);
+    if (Object.keys(e).length > 0 || needsAck) return;
     setSending(true);
     try {
       await http.post("/api/site/cargo-enquiry", { service, ...form, website });
       setSent(true);
       setForm(EMPTY);
+      setAck(false);
     } catch (err) {
       if (err instanceof HttpError && err.details) {
         const next: Partial<Record<keyof Fields, string>> = {};
@@ -154,6 +159,19 @@ export function CargoEnquiryForm({ service }: { service: "air" | "sea" | "expres
         className="min-h-32"
         maxLength={3000}
       />
+
+      {service !== "express" ? (
+        <div>
+          <label className="flex items-start gap-3 rounded-2xl bg-surface p-3 text-sm">
+            <input type="checkbox" required className="mt-1 size-4 shrink-0" checked={ack} onChange={(e) => { setAck(e.target.checked); if (e.target.checked) setAckError(null); }} />
+            <span>
+              I understand that before my shipment is finalised and payment made, I will need to fill the export goods declaration form, and that a completely filled and signed form with the terms and conditions agreed validates a successful shipment.
+              <span className="ml-0.5 text-[var(--color-danger)]">*</span>
+            </span>
+          </label>
+          {ackError ? <p className="mt-1 text-xs font-medium text-[var(--color-danger)]">{ackError}</p> : null}
+        </div>
+      ) : null}
 
       {/* Honeypot: people never see or fill this, bots do. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">

@@ -139,7 +139,6 @@ export function AdminNewShipmentPage() {
         errors={errors}
         onChange={(p) => setReceiver({ ...receiver, ...p })}
         lockedCountry={international ? undefined : "NG"}
-        excludeCountries={international ? ["NG"] : undefined}
         zipRequired={international}
       />
 

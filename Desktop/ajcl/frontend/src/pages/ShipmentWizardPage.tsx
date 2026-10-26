@@ -353,7 +353,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
             <li key={s} className="flex-1">
               <div className={cn("h-1.5 rounded-sm", i <= stepIndex ? "bg-ink" : "bg-line-strong")} />
               <p className={cn("mt-1.5 text-xs font-semibold", i === stepIndex ? "text-ink" : "hidden text-muted sm:block")}>
-                {i + 1}. {s}
+                {i + 1}. {international && s === "Review" ? "Payment" : s}
               </p>
             </li>
           ))}
@@ -496,7 +496,6 @@ function PackageStep({
         errors={errors}
         onChange={(p) => patchParty("receiver", p)}
         lockedCountry={international ? undefined : "NG"}
-        excludeCountries={international ? ["NG"] : undefined}
         zipRequired={international}
         emailRequired={international}
       />

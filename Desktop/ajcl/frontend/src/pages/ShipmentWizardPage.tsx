@@ -15,6 +15,8 @@ import { vehicleImage } from "@/lib/vehicle-media";
 import { LocationPicker } from "@/components/shipping/LocationPicker";
 import type { LocationDTO, QuoteDTO } from "@/types";
 import type { RateEstimate, Shipment, ShippingConfig } from "@/types/shipping";
+import { ITEM_CURRENCIES } from "@/config/shipping";
+import { useToast } from "@/components/ui/Toast";
 import { toInternationalPhone, phoneProblem } from "@/lib/phone";
 import { PhoneField } from "@/components/shipping/PhoneField";
 
@@ -29,7 +31,7 @@ export type PartyForm = {
   country: string;
   zip: string;
 };
-export type ItemForm = { description: string; quantity: string; value: string; hsCode: string };
+export type ItemForm = { description: string; quantity: string; value: string; hsCode: string; currency: string };
 type Draft = {
   sender: PartyForm;
   receiver: PartyForm;
@@ -65,25 +67,41 @@ export const blankParty = (country: string): PartyForm => ({
   country,
   zip: "",
 });
-export const blankItem = (): ItemForm => ({ description: "", quantity: "1", value: "", hsCode: "" });
+export const blankItem = (currency = "NGN"): ItemForm => ({ description: "", quantity: "1", value: "", hsCode: "", currency });
+
+/** A sender outside the country of our office is collected by the carrier, not dropped at the office. */
+export function senderIsAbroad(senderCountry: string, officeCountry?: string): boolean {
+  return Boolean(senderCountry) && senderCountry.toUpperCase() !== (officeCountry || "NG").toUpperCase();
+}
 
 type StepKey = "Package" | "Contents" | "Handover" | "Rates" | "Review";
 const STEPS_INTERSTATE: StepKey[] = ["Package", "Contents", "Handover", "Review"];
 /** International: once the handover is chosen, the next thing is to see carrier rates and pick one. */
 const STEPS_INTERNATIONAL: StepKey[] = ["Package", "Contents", "Handover", "Rates", "Review"];
+/** A sender abroad has no office stop, so there is no handover to choose. */
+const STEPS_INTERNATIONAL_CARRIER: StepKey[] = ["Package", "Contents", "Rates", "Review"];
 
 export function ShipmentWizardPage() {
-  const { type } = useParams();
-  if (type !== "interstate" && type !== "international") return <Navigate to="/send" replace />;
-  return <Wizard type={type} />;
+  const { type: typeParam, flow: flowParam } = useParams();
+  // /send/interstate, or /send/international/export, or /send/international/global
+  if (flowParam) {
+    if (flowParam !== "export" && flowParam !== "global") return <Navigate to="/send/international" replace />;
+    return <Wizard type="international" flow={flowParam} />;
+  }
+  if (typeParam === "international") return <Navigate to="/send/international" replace />;
+  if (typeParam !== "interstate") return <Navigate to="/send" replace />;
+  return <Wizard type="interstate" />;
 }
 
-function Wizard({ type }: { type: "interstate" | "international" }) {
+function Wizard({ type, flow }: { type: "interstate" | "international"; flow?: "export" | "global" }) {
   const international = type === "international";
-  useDocumentTitle(international ? "International shipment" : "Interstate shipment");
+  const exportFlow = international && flow === "export";
+  const globalFlow = international && flow === "global";
+  useDocumentTitle(exportFlow ? "Ship from Nigeria" : globalFlow ? "Ship from another country" : "Interstate shipment");
   const navigate = useNavigate();
+  const toast = useToast();
   const { user } = useAuth();
-  const storageKey = `ajc:shipment-draft:${type}:v1`;
+  const storageKey = `ajc:shipment-draft:${type}${flow ? `:${flow}` : ""}:v1`;
 
   const { data: config, loading: configLoading } = useAsync(
     () => http.get<ShippingConfig>("/api/shipments/config"),
@@ -92,8 +110,8 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
 
   const [draft, setDraft] = useState<Draft>(() => {
     const base: Draft = {
-      // An international sender can be anywhere, so the country is chosen. Interstate always starts in Nigeria.
-      sender: { ...blankParty(international ? "" : "NG"), name: user?.fullName ?? "", phone: user?.phone ?? "", email: user?.email ?? "" },
+      // Export and interstate start in Nigeria. A global sender can be anywhere, so the country is chosen.
+      sender: { ...blankParty(globalFlow ? "" : "NG"), name: user?.fullName ?? "", phone: user?.phone ?? "", email: user?.email ?? "" },
       receiver: blankParty(international ? "" : "NG"),
       description: "",
       weight: "",
@@ -174,6 +192,10 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
     req("r-state", draft.receiver.state);
     if (international && !draft.receiver.country) e["r-country"] = "Choose a country";
     if (international && !draft.receiver.zip.trim()) e["r-zip"] = "Enter the postcode";
+    if (globalFlow && !draft.sender.zip.trim()) e["s-zip"] = "Enter the postcode. The carrier needs it to collect";
+    if (international && !(Number(draft.length) > 0 && Number(draft.width) > 0 && Number(draft.height) > 0)) {
+      e.dims = "Enter the length, width and height. International rates depend on the size";
+    }
     if (draft.receiver.email && !/^\S+@\S+\.\S+$/.test(draft.receiver.email)) e["r-email"] = "Enter a valid email";
     if (international) {
       if (!draft.sender.email.trim()) e["s-email"] = "Enter the sender's email";
@@ -250,12 +272,14 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
         description: i.description.trim(),
         quantity: Number(i.quantity) || 1,
         value: Number(i.value) || 0,
+        currency: international ? i.currency : "NGN",
         hsCode: i.hsCode.trim() || undefined,
       }));
 
     try {
       const res = await http.post<{ shipment: Shipment }>("/api/shipments", {
         shipmentType: type,
+        flow: international ? flow : undefined,
         sender: party(draft.sender),
         receiver: party(draft.receiver),
         parcel: {
@@ -266,7 +290,9 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
           items,
         },
         handover:
-          draft.method === "pickup"
+          globalFlow
+            ? { method: "carrier" }
+            : draft.method === "pickup"
             ? {
                 method: "pickup",
                 pickup: {
@@ -286,7 +312,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
       }
       let s = res.shipment;
       // The prices are loaded when the shipment is created. If that did not work the first time, try once more.
-      if (international && draft.carrier && !s.prepay?.available) {
+      if (international && draft.carrier && !s.prepay?.available && s.status !== "quote_sent") {
         try {
           s = (await http.post<{ shipment: Shipment }>(`/api/shipments/${s.reference}/prepay-retry`)).shipment;
         } catch {
@@ -301,7 +327,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
         }
       }
       // International with a carrier chosen: ONE payment for the pickup fee (if any) and the chosen carrier's price.
-      if (international && draft.carrier && s.prepay?.available) {
+      if (international && draft.carrier && (s.prepay?.available || s.status === "quote_sent")) {
         const option = s.quote.options.find((o) => o.carrierName === draft.carrier);
         if (option && Math.abs(option.total - (draft.carrierTotal ?? option.total)) < 1) {
           try {
@@ -335,15 +361,31 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
     }
   }
 
-  const steps = international ? STEPS_INTERNATIONAL : STEPS_INTERSTATE;
+  const abroad = globalFlow;
+
+  // Someone who picks Nigeria as the sender of a global shipment is moved to the Nigeria flow, with what they typed.
+  useEffect(() => {
+    if (!globalFlow || draft.sender.country !== "NG") return;
+    try {
+      const carry: Draft = { ...draft, method: null, pickupLoc: null, vehicleSlug: null, date: "", time: "", carrier: null, carrierTotal: null, pickupFee: null, agreed: false };
+      sessionStorage.setItem("ajc:shipment-draft:international:export:v1", JSON.stringify(carry));
+      sessionStorage.removeItem(storageKey);
+    } catch {
+      /* ignore */
+    }
+    toast.success("Shipping from Nigeria", "Shipments from Nigeria use the Ship from Nigeria steps, with pickup or drop-off.");
+    navigate("/send/international/export", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globalFlow, draft.sender.country]);
+  const steps = !international ? STEPS_INTERSTATE : abroad ? STEPS_INTERNATIONAL_CARRIER : STEPS_INTERNATIONAL;
   const stepIndex = steps.indexOf(step);
 
   return (
     <div className="container-page py-6 md:py-10">
       <div className="mx-auto max-w-3xl">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold sm:text-4xl">{international ? "International shipment" : "Interstate shipment"}</h1>
-          <button type="button" onClick={() => navigate("/send")} className="text-sm font-semibold text-muted hover:text-ink">
+          <h1 className="text-3xl font-bold sm:text-4xl">{exportFlow ? "Ship from Nigeria" : globalFlow ? "Ship from another country" : "Interstate shipment"}</h1>
+          <button type="button" onClick={() => navigate(international ? "/send/international" : "/send")} className="text-sm font-semibold text-muted hover:text-ink">
             Change type
           </button>
         </div>
@@ -364,6 +406,8 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
         ) : step === "Package" ? (
           <PackageStep
             international={international}
+            senderAbroad={abroad}
+            exportFlow={exportFlow}
             draft={draft}
             errors={errors}
             patch={patch}
@@ -377,7 +421,8 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
             errors={errors}
             patch={patch}
             onBack={() => go("Package")}
-            onNext={() => validateItems() && go("Handover")}
+            onNext={() => validateItems() && go(abroad ? "Rates" : "Handover")}
+            defaultCurrency={abroad ? "USD" : "NGN"}
           />
         ) : step === "Handover" ? (
           <HandoverStep
@@ -390,7 +435,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
             onNext={() => validateHandover() && go(international ? "Rates" : "Review")}
           />
         ) : step === "Rates" ? (
-          <RatesStep draft={draft} errors={errors} patch={patch} onBack={() => go("Handover")} onNext={() => go("Review")} />
+          <RatesStep draft={draft} errors={errors} patch={patch} onBack={() => go(abroad ? "Contents" : "Handover")} onNext={() => go("Review")} />
         ) : (
           <ReviewStep
             international={international}
@@ -402,6 +447,7 @@ function Wizard({ type }: { type: "interstate" | "international" }) {
             submitError={submitError}
             onBack={() => go(international ? "Rates" : "Handover")}
             onSubmit={submit}
+            abroad={abroad}
           />
         )}
       </div>
@@ -468,6 +514,8 @@ export function PartyFields({
 
 function PackageStep({
   international,
+  senderAbroad,
+  exportFlow,
   draft,
   errors,
   patch,
@@ -475,6 +523,8 @@ function PackageStep({
   onNext,
 }: StepCommon & {
   international: boolean;
+  senderAbroad?: boolean;
+  exportFlow?: boolean;
   patchParty: (who: "sender" | "receiver", p: Partial<PartyForm>) => void;
   onNext: () => void;
 }) {
@@ -482,12 +532,14 @@ function PackageStep({
     <div className="space-y-5">
       <PartyFields
         prefix="s"
-        title={international ? "Sender" : "Sender (in Nigeria)"}
+        title={international && !exportFlow ? "Sender" : "Sender (in Nigeria)"}
         party={draft.sender}
         errors={errors}
         onChange={(p) => patchParty("sender", p)}
-        lockedCountry={international ? undefined : "NG"}
+        lockedCountry={!international || exportFlow ? "NG" : undefined}
+        hideCountry={exportFlow}
         emailRequired={international}
+        zipRequired={senderAbroad}
       />
       <PartyFields
         prefix="r"
@@ -496,6 +548,7 @@ function PackageStep({
         errors={errors}
         onChange={(p) => patchParty("receiver", p)}
         lockedCountry={international ? undefined : "NG"}
+        excludeCountries={exportFlow ? ["NG"] : undefined}
         zipRequired={international}
         emailRequired={international}
       />
@@ -505,13 +558,16 @@ function PackageStep({
           <Textarea label="What are you sending?" required value={draft.description} onChange={(e) => patch({ description: e.target.value })} error={errors.description} placeholder="e.g. Clothes and books" />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input label="Estimated weight (kg)" required type="number" inputMode="decimal" min="0.01" step="0.01" value={draft.weight} onChange={(e) => patch({ weight: e.target.value })} error={errors.weight} hint="We weigh it again at our office. The final price uses that weight, rounded up to the next whole kg." />
-            <Input label="Declared value (NGN)" type="number" inputMode="decimal" min="0" value={draft.declaredValue} onChange={(e) => patch({ declaredValue: e.target.value })} hint="Optional" />
+            {international ? null : (
+              <Input label="Declared value (NGN)" type="number" inputMode="decimal" min="0" value={draft.declaredValue} onChange={(e) => patch({ declaredValue: e.target.value })} hint="Optional" />
+            )}
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <Input label="Length (cm)" type="number" inputMode="decimal" min="0" value={draft.length} onChange={(e) => patch({ length: e.target.value })} />
-            <Input label="Width (cm)" type="number" inputMode="decimal" min="0" value={draft.width} onChange={(e) => patch({ width: e.target.value })} />
-            <Input label="Height (cm)" type="number" inputMode="decimal" min="0" value={draft.height} onChange={(e) => patch({ height: e.target.value })} />
+            <Input label="Length (cm)" required={international} type="number" inputMode="decimal" min="0" value={draft.length} onChange={(e) => patch({ length: e.target.value })} />
+            <Input label="Width (cm)" required={international} type="number" inputMode="decimal" min="0" value={draft.width} onChange={(e) => patch({ width: e.target.value })} />
+            <Input label="Height (cm)" required={international} type="number" inputMode="decimal" min="0" value={draft.height} onChange={(e) => patch({ height: e.target.value })} />
           </div>
+          {errors.dims ? <p className="text-xs font-medium text-[var(--color-danger)]">{errors.dims}</p> : null}
         </CardBody>
       </Card>
       <div className="flex justify-end [&>*]:w-full sm:[&>*]:w-auto">
@@ -532,8 +588,16 @@ function ContentsStep({
   patch,
   onBack,
   onNext,
-}: StepCommon & { international: boolean; onBack: () => void; onNext: () => void }) {
+  defaultCurrency = "NGN",
+}: StepCommon & { international: boolean; onBack: () => void; onNext: () => void; defaultCurrency?: string }) {
   const setItem = (n: number, p: Partial<ItemForm>) => patch({ items: draft.items.map((it, i) => (i === n ? { ...it, ...p } : it)) });
+  // Items nobody has started yet follow the sender's currency.
+  useEffect(() => {
+    if (international && draft.items.every((i) => !i.description.trim() && !i.value && i.currency !== defaultCurrency)) {
+      patch({ items: draft.items.map((i) => ({ ...i, currency: defaultCurrency })) });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultCurrency]);
   return (
     <div className="space-y-5">
       <Card>
@@ -551,10 +615,19 @@ function ContentsStep({
           {errors.items ? <Alert tone="danger">{errors.items}</Alert> : null}
           {draft.items.map((it, n) => (
             <div key={n} className="space-y-3 rounded-sm border border-line p-4">
-              <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr]">
+              <div className={international ? "grid gap-3 sm:grid-cols-[2fr_1fr_1fr_1fr]" : "grid gap-3 sm:grid-cols-[2fr_1fr_1fr]"}>
                 <Input label="Item" value={it.description} onChange={(e) => setItem(n, { description: e.target.value })} error={errors[`i-${n}-d`]} />
                 <Input label="Quantity" type="number" min="1" value={it.quantity} onChange={(e) => setItem(n, { quantity: e.target.value })} error={errors[`i-${n}-q`]} />
-                <Input label="Value each (NGN)" type="number" min="0" value={it.value} onChange={(e) => setItem(n, { value: e.target.value })} error={errors[`i-${n}-v`]} />
+                <Input label={international ? "Value each" : "Value each (NGN)"} type="number" min="0" value={it.value} onChange={(e) => setItem(n, { value: e.target.value })} error={errors[`i-${n}-v`]} />
+                {international ? (
+                  <Select label="Currency" value={it.currency} onChange={(e) => setItem(n, { currency: e.target.value })}>
+                    {ITEM_CURRENCIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                ) : null}
               </div>
               <div className="flex items-end justify-between gap-3">
                 <Input label="HS code" value={it.hsCode} onChange={(e) => setItem(n, { hsCode: e.target.value })} error={errors[`i-${n}-h`]} hint="Optional" containerClassName="max-w-[11rem]" />
@@ -567,7 +640,7 @@ function ContentsStep({
             </div>
           ))}
           {draft.items.length < 30 ? (
-            <button type="button" onClick={() => patch({ items: [...draft.items, blankItem()] })} className="text-sm font-semibold text-ink-soft hover:text-ink">
+            <button type="button" onClick={() => patch({ items: [...draft.items, blankItem(draft.items[0]?.currency)] })} className="text-sm font-semibold text-ink-soft hover:text-ink">
               + Add another item
             </button>
           ) : null}
@@ -780,15 +853,32 @@ function HandoverStep({
 const ratesCache = new Map<string, RateEstimate>();
 
 function RatesStep({ draft, patch, onBack, onNext }: StepCommon & { onBack: () => void; onNext: () => void }) {
-  const hasDims = draft.length && draft.width && draft.height;
+  const party = (p: PartyForm) => ({
+    name: p.name.trim(),
+    phone: toInternationalPhone(p.phone, p.country, { strict: true }) ?? p.phone.trim(),
+    email: p.email.trim() || undefined,
+    line1: p.line1.trim(),
+    line2: p.line2.trim() || undefined,
+    city: p.city.trim(),
+    state: p.state.trim(),
+    country: p.country,
+    zip: p.zip.trim() || undefined,
+  });
+  // The real route, size and items: the carrier prices the shipment it will actually be asked to move.
   const body = {
     shipmentType: "international",
-    country: draft.receiver.country,
-    state: draft.receiver.state,
-    city: draft.receiver.city,
-    zip: draft.receiver.zip.trim() || undefined,
-    weightKg: Number(draft.weight),
-    dimensions: hasDims ? { lengthCm: Number(draft.length), widthCm: Number(draft.width), heightCm: Number(draft.height) } : undefined,
+    flow: draft.sender.country === "NG" ? "export" : "global",
+    sender: party(draft.sender),
+    receiver: party(draft.receiver),
+    parcel: {
+      description: draft.description.trim(),
+      estimatedWeightKg: Number(draft.weight),
+      dimensions: { lengthCm: Number(draft.length), widthCm: Number(draft.width), heightCm: Number(draft.height) },
+      declaredValue: Number(draft.declaredValue) || 0,
+      items: draft.items
+        .filter((i) => i.description.trim())
+        .map((i) => ({ description: i.description.trim(), quantity: Number(i.quantity) || 1, value: Number(i.value) || 0, currency: i.currency, hsCode: i.hsCode.trim() || undefined })),
+    },
   };
   const key = JSON.stringify(body);
   const [state, setState] = useState<{ loading: boolean; error?: string; data?: RateEstimate }>(() => ({ loading: !ratesCache.has(key), data: ratesCache.get(key) }));
@@ -804,7 +894,7 @@ function RatesStep({ draft, patch, onBack, onNext }: StepCommon & { onBack: () =
     let cancelled = false;
     setState({ loading: true });
     http
-      .post<RateEstimate>("/api/shipments/estimate", body)
+      .post<RateEstimate>("/api/shipments/rates", body)
       .then((data) => {
         ratesCache.set(key, data);
         if (!cancelled) setState({ loading: false, data });
@@ -940,7 +1030,9 @@ function ReviewStep({
   submitError,
   onBack,
   onSubmit,
+  abroad,
 }: StepCommon & {
+  abroad?: boolean;
   international: boolean;
   config?: ShippingConfig;
   submitting: boolean;
@@ -1028,7 +1120,9 @@ function ReviewStep({
             <span>
               {draft.method === "pickup"
                 ? "I have read the refund policy and I am ready to pay."
-                : "I understand I need to bring the package to the office and quote my reference."}
+                : abroad
+                  ? "I understand the carrier will collect the package from the sender's address."
+                  : "I understand I need to bring the package to the office and quote my reference."}
               {international ? " I confirm the details are correct and I accept the terms, including paying any additional fee if the weight is higher." : ""}
               <span className="ml-0.5 text-[var(--color-danger)]">*</span>
             </span>

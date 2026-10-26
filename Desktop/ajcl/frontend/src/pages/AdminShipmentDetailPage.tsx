@@ -11,6 +11,7 @@ import {
   InfoCard,
   PartyBlock,
   QuoteOptionCard,
+  shipmentKindLabel,
   ShipmentStatusBadge,
   ShipmentTimeline,
 } from "@/components/shipping/ShipmentBits";
@@ -88,8 +89,8 @@ export function AdminShipmentDetailPage() {
           <ShipmentStatusBadge status={s.status} />
         </div>
         <p className="mt-1 text-sm text-muted">
-          {s.shipmentType === "international" ? "International" : "Interstate"} ·{" "}
-          {s.handover.method === "pickup" ? "Rider pickup" : "Customer drop-off"} · {s.customer?.name} ({s.customer?.email}, {s.customer?.phone})
+          {shipmentKindLabel(s)} ·{" "}
+          {s.handover.method === "pickup" ? "Rider pickup" : s.handover.method === "carrier" ? "Carrier collects from the sender" : "Customer drop-off"} · {s.customer?.name} ({s.customer?.email}, {s.customer?.phone})
         </p>
       </div>
 

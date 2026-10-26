@@ -11,6 +11,7 @@ import { http, HttpError } from "@/lib/http";
 import { toInternationalPhone, phoneProblem } from "@/lib/phone";
 import { PartyFields, blankParty, blankItem, type PartyForm, type ItemForm } from "@/pages/ShipmentWizardPage";
 import type { Shipment } from "@/types/shipping";
+import { ITEM_CURRENCIES } from "@/config/shipping";
 
 type Type = "interstate" | "international";
 
@@ -62,6 +63,7 @@ export function AdminNewShipmentPage() {
     if (international && !receiver.country) e["r-country"] = "Choose a country";
     if (international && !receiver.zip.trim()) e["r-zip"] = "Enter the postcode";
     if (description.trim().length < 3) e.description = "Describe the package";
+    if (international && !(Number(dims.l) > 0 && Number(dims.w) > 0 && Number(dims.h) > 0)) e.dims = "Enter the length, width and height. International rates depend on the size";
     if (!(Number(weight) >= 0.01)) e.weight = "Enter the weight in kg";
     if (international && !items.some((i) => i.description.trim())) e.items = "List what is in the package (needed for customs)";
     setErrors(e);
@@ -96,7 +98,7 @@ export function AdminNewShipmentPage() {
           declaredValue: Number(declaredValue) || 0,
           items: items
             .filter((i) => i.description.trim())
-            .map((i) => ({ description: i.description.trim(), quantity: Number(i.quantity) || 1, value: Number(i.value) || 0, hsCode: i.hsCode.trim() || undefined })),
+            .map((i) => ({ description: i.description.trim(), quantity: Number(i.quantity) || 1, value: Number(i.value) || 0, currency: i.currency, hsCode: i.hsCode.trim() || undefined })),
         },
         note: note.trim() || undefined,
       });
@@ -151,18 +153,25 @@ export function AdminNewShipmentPage() {
             <Input label="Declared value (NGN)" type="number" min="0" value={declaredValue} onChange={(e) => setDeclaredValue(e.target.value)} hint="Optional" />
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <Input label="Length (cm)" type="number" min="0" value={dims.l} onChange={(e) => setDims({ ...dims, l: e.target.value })} />
-            <Input label="Width (cm)" type="number" min="0" value={dims.w} onChange={(e) => setDims({ ...dims, w: e.target.value })} />
-            <Input label="Height (cm)" type="number" min="0" value={dims.h} onChange={(e) => setDims({ ...dims, h: e.target.value })} />
+            <Input label="Length (cm)" required={international} type="number" min="0" value={dims.l} onChange={(e) => setDims({ ...dims, l: e.target.value })} />
+            <Input label="Width (cm)" required={international} type="number" min="0" value={dims.w} onChange={(e) => setDims({ ...dims, w: e.target.value })} />
+            <Input label="Height (cm)" required={international} type="number" min="0" value={dims.h} onChange={(e) => setDims({ ...dims, h: e.target.value })} />
           </div>
 
           <div className="space-y-3 border-t border-line pt-4">
             <h3 className="text-sm font-bold">Contents{international ? " (needed for customs)" : " (optional)"}</h3>
             {items.map((it, n) => (
-              <div key={n} className="grid gap-3 sm:grid-cols-[2fr_5rem_7rem_7rem_auto]">
+              <div key={n} className="grid gap-3 sm:grid-cols-[2fr_5rem_7rem_6rem_7rem_auto]">
                 <Input aria-label="Item" placeholder="Item" value={it.description} onChange={(e) => patchItem(n, { description: e.target.value })} />
                 <Input aria-label="Quantity" type="number" min="1" value={it.quantity} onChange={(e) => patchItem(n, { quantity: e.target.value })} />
-                <Input aria-label="Value of one (NGN)" placeholder="Value" type="number" min="0" value={it.value} onChange={(e) => patchItem(n, { value: e.target.value })} />
+                <Input aria-label="Value of one" placeholder="Value" type="number" min="0" value={it.value} onChange={(e) => patchItem(n, { value: e.target.value })} />
+                <Select aria-label="Currency" value={it.currency} onChange={(e) => patchItem(n, { currency: e.target.value })}>
+                  {ITEM_CURRENCIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </Select>
                 <Input aria-label="HS code" placeholder="HS code" value={it.hsCode} onChange={(e) => patchItem(n, { hsCode: e.target.value })} />
                 {items.length > 1 ? (
                   <button type="button" className="text-sm font-semibold text-[var(--color-danger)] hover:underline" onClick={() => setItems(items.filter((_, i) => i !== n))}>
@@ -173,6 +182,7 @@ export function AdminNewShipmentPage() {
                 )}
               </div>
             ))}
+            {errors.dims ? <p className="text-xs font-medium text-[var(--color-danger)]">{errors.dims}</p> : null}
             {errors.items ? <p className="text-xs font-medium text-[var(--color-danger)]">{errors.items}</p> : null}
             <button type="button" className="text-sm font-semibold text-ink-soft hover:text-ink" onClick={() => setItems([...items, blankItem()])}>
               + Add an item

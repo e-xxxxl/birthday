@@ -2,7 +2,7 @@ import { AppLink as Link } from "@/components/ui/AppLink";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Alert, LoadingBlock } from "@/components/ui/Feedback";
-import { ShipmentStatusBadge } from "@/components/shipping/ShipmentBits";
+import { ShipmentStatusBadge, shipmentKindLabel } from "@/components/shipping/ShipmentBits";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http } from "@/lib/http";
@@ -51,7 +51,7 @@ export function DashboardShipmentsPage() {
                 To {s.receiver.name}, {s.receiver.city}, {countryName(s.receiver.country)}
               </p>
               <p className="text-xs text-muted">
-                {s.shipmentType === "international" ? "International" : "Interstate"}
+                {shipmentKindLabel(s)}
                 {s.createdAt ? ` · ${formatDate(s.createdAt)}` : ""}
               </p>
             </div>

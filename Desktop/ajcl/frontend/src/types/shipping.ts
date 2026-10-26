@@ -40,6 +40,8 @@ export type RefundRecord = { amount: number; reason: string; reference?: string;
 export type Shipment = {
   id: string;
   reference: string;
+  /** International only: "export" (from Nigeria, through our office) or "global" (any country to any country). */
+  flow?: "export" | "global";
   shipmentType: ShipmentType;
   status: ShipmentStatus;
   createdAt?: string;
@@ -55,7 +57,7 @@ export type Shipment = {
     items: ShipmentItem[];
   };
   handover: {
-    method: "pickup" | "dropoff";
+    method: "pickup" | "dropoff" | "carrier";
     pickupBookingReference?: string;
     pickupFee?: { amount: number; paid: boolean; status: string; bookingStatus: string };
     receivedAt?: string;
@@ -101,6 +103,7 @@ export type ShippingConfig = {
     city: string;
     state: string;
     zip: string;
+    country: string;
     lat: number | null;
     lng: number | null;
     openingHours: string;

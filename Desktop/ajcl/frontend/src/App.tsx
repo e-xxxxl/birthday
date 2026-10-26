@@ -52,6 +52,7 @@ import { AdminShippingPage } from "@/pages/AdminShippingPage";
 import { AdminSitePage } from "@/pages/AdminSitePage";
 import { AdminBlogPage } from "@/pages/AdminBlogPage";
 import { AdminNewShipmentPage } from "@/pages/AdminNewShipmentPage";
+import { InternationalChoicePage } from "@/pages/InternationalChoicePage";
 import { BlogPage } from "@/pages/BlogPage";
 import { BlogPostPage } from "@/pages/BlogPostPage";
 import { QuotePage } from "@/pages/QuotePage";
@@ -99,6 +100,8 @@ export function App() {
 
           <Route path="send" element={<SendLayout />}>
             <Route index element={<SendPage />} />
+            <Route path="international" element={<InternationalChoicePage />} />
+            <Route path="international/:flow" element={<ShipmentWizardPage />} />
             <Route path=":type" element={<ShipmentWizardPage />} />
           </Route>
 

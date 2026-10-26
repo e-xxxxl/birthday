@@ -13,6 +13,7 @@ import {
   QuoteOptionCard,
   ShipmentStatusBadge,
   ShipmentTimeline,
+  shipmentKindLabel,
 } from "@/components/shipping/ShipmentBits";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -125,7 +126,7 @@ export function ShipmentDetailPage() {
           <ShipmentStatusBadge status={s.status} />
         </div>
         <p className="mt-1 text-sm text-muted">
-          {international ? "International" : "Interstate"} shipment{s.createdAt ? ` · created ${formatDateTime(s.createdAt)}` : ""}
+          {shipmentKindLabel(s)} shipment{s.createdAt ? ` · created ${formatDateTime(s.createdAt)}` : ""}
         </p>
       </div>
 
@@ -234,7 +235,7 @@ export function ShipmentDetailPage() {
                 <div>
                   <h2 className="text-2xl font-bold">Choose how to ship</h2>
                   <p className="text-sm text-muted">
-                    Weighed at {s.confirmed?.weightKg} kg, billed as {s.quote.billedWeightKg} kg.
+                    {s.confirmed ? `Weighed at ${s.confirmed.weightKg} kg, billed as ${s.quote.billedWeightKg} kg.` : `Priced for ${s.parcel.estimatedWeightKg} kg.`}
                   </p>
                 </div>
                 <div role="radiogroup" className="space-y-3">

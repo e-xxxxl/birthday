@@ -3,12 +3,19 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { cn, formatDateTime, formatNaira } from "@/lib/utils";
 import {
   DEFAULT_DISCLAIMER,
+  SHIPMENT_FLOW_CARRIER,
   SHIPMENT_FLOW_DROPOFF,
   SHIPMENT_FLOW_PICKUP,
   SHIPMENT_STATUS_META,
   type ShipmentStatus,
 } from "@/config/shipping";
 import type { QuoteOption, Shipment } from "@/types/shipping";
+
+/** "Interstate", "International · Export from Nigeria" or "International · Global". */
+export function shipmentKindLabel(s: { shipmentType: string; flow?: "export" | "global" }): string {
+  if (s.shipmentType !== "international") return "Interstate";
+  return s.flow === "export" ? "International · Export from Nigeria" : s.flow === "global" ? "International · Global" : "International";
+}
 
 export function ShipmentStatusBadge({ status }: { status: ShipmentStatus }) {
   const meta = SHIPMENT_STATUS_META[status];
@@ -53,7 +60,8 @@ export function DisclaimerNotice({
 
 /** Where a shipment is on its journey. Failed and cancelled shipments are shown as such. */
 export function ShipmentTimeline({ shipment }: { shipment: Shipment }) {
-  const flow = shipment.handover.method === "pickup" ? SHIPMENT_FLOW_PICKUP : SHIPMENT_FLOW_DROPOFF;
+  const flow =
+    shipment.handover.method === "pickup" ? SHIPMENT_FLOW_PICKUP : shipment.handover.method === "carrier" ? SHIPMENT_FLOW_CARRIER : SHIPMENT_FLOW_DROPOFF;
   const status = shipment.status;
   const at = (s: ShipmentStatus) => shipment.statusHistory.find((h) => h.status === s)?.at;
 

@@ -26,11 +26,11 @@ const OPTIONS: { href: string; title: string; where: string; body: string; image
   {
     href: "/send/international",
     title: "International shipping",
-    where: "Outside Nigeria",
-    body: "The same steps as interstate, with an item list for customs. The receiver pays duties at the destination.",
+    where: "From Nigeria, or any country to any country",
+    body: "Ship from Nigeria through our office, or between any two countries with the carrier collecting from the sender. Item list for customs; the receiver pays duties.",
     image: "ships",
     icon: "globe",
-    facts: ["Pickup or drop-off", "Live carrier rates", "Customs item list"],
+    facts: ["Export or global", "Live carrier rates", "Customs item list"],
   },
 ];
 

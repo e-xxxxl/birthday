@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState, LoadingBlock, Alert } from "@/components/ui/Feedback";
 import { BookingCard } from "@/components/dashboard/BookingCard";
 import { DashboardBookings } from "@/components/dashboard/DashboardBookings";
-import { ShipmentStatusBadge } from "@/components/shipping/ShipmentBits";
+import { ShipmentStatusBadge, shipmentKindLabel } from "@/components/shipping/ShipmentBits";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -47,7 +47,7 @@ function ShipmentRow({ s }: { s: Shipment }) {
           To {s.receiver.name}, {s.receiver.city}, {regionName(s.receiver.country)}
         </p>
         <p className="text-xs text-muted">
-          {s.shipmentType === "international" ? "International" : "Interstate"}
+          {shipmentKindLabel(s)}
           {s.createdAt ? ` · ${formatDate(s.createdAt)}` : ""}
         </p>
       </div>

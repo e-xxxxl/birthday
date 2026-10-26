@@ -4,7 +4,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Alert, LoadingBlock } from "@/components/ui/Feedback";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
-import { ShipmentStatusBadge } from "@/components/shipping/ShipmentBits";
+import { ShipmentStatusBadge, shipmentKindLabel } from "@/components/shipping/ShipmentBits";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http } from "@/lib/http";
@@ -103,7 +103,7 @@ export function AdminShipmentsPage() {
               <p className="font-bold">
                 {s.reference}{" "}
                 <span className="ml-1 rule-label">
-                  {s.shipmentType === "international" ? "International" : "Interstate"} · {s.handover.method === "pickup" ? "Rider pickup" : "Drop-off"}
+                  {shipmentKindLabel(s)} · {s.handover.method === "pickup" ? "Rider pickup" : s.handover.method === "carrier" ? "Carrier collects" : "Drop-off"}
                 </span>
               </p>
               <p className="truncate text-sm text-muted">

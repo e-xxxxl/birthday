@@ -18,7 +18,7 @@ import type { RateEstimate, Shipment, ShippingConfig } from "@/types/shipping";
 import { ITEM_CURRENCIES } from "@/config/shipping";
 import { useToast } from "@/components/ui/Toast";
 import { toInternationalPhone, phoneProblem } from "@/lib/phone";
-import { PhoneField } from "@/components/shipping/PhoneField";
+import { PhoneField, phoneMatchesCountry, useDialCodes } from "@/components/shipping/PhoneField";
 
 export type PartyForm = {
   name: string;
@@ -162,6 +162,51 @@ function Wizard({ type, flow }: { type: "interstate" | "international"; flow?: "
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const dials = useDialCodes();
+  const phoneMismatch = (country: string) =>
+    `This is not a ${regionName(country)} number. Change the country code to +${dials?.[country.toUpperCase()] ?? ""}, or change the address country to where the number is from`;
+
+  // Before moving on, the carrier is asked whether it accepts these numbers and addresses, so a wrong one is fixed now
+  // and not after the person has filled in the rest. If the check itself cannot run, the rates step reports it later.
+  const [checking, setChecking] = useState(false);
+  async function checkAddresses() {
+    if (!validatePackage()) return;
+    setChecking(true);
+    try {
+      await http.post("/api/shipments/check-addresses", {
+        shipmentType: type,
+        flow: international ? flow : undefined,
+        sender: partyBody(draft.sender),
+        receiver: partyBody(draft.receiver),
+      });
+    } catch (err) {
+      if (showAddressProblem(err)) {
+        setChecking(false);
+        return;
+      }
+    }
+    setChecking(false);
+    go("Contents");
+  }
+
+  // The carrier refused a detail of an address: go back to the form with that field marked, so it can be fixed.
+  function showAddressProblem(err: unknown): boolean {
+    if (!(err instanceof HttpError) || !err.details) return false;
+    const e: Record<string, string> = {};
+    for (const [key, msgs] of Object.entries(err.details)) {
+      const m = /^(sender|receiver)\.(phone|state|city|zip)$/.exec(key);
+      if (m) e[`${m[1] === "sender" ? "s" : "r"}-${m[2]}`] = msgs[0] ?? err.message;
+    }
+    if (Object.keys(e).length === 0) return false;
+    setStep("Package");
+    setErrors(e);
+    setSubmitting(false);
+    setSubmitError(null);
+    toast.error("Please fix this detail", err.message);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return true;
+  }
+
   const officeLoc = useMemo<LocationDTO | null>(() => {
     if (!config?.office.line1) return null;
     const o = config.office;
@@ -181,12 +226,14 @@ function Wizard({ type, flow }: { type: "interstate" | "international"; flow?: "
     };
     req("s-name", draft.sender.name);
     if (!toInternationalPhone(draft.sender.phone, draft.sender.country, { strict: true })) e["s-phone"] = phoneProblem(draft.sender.country);
+    else if (!phoneMatchesCountry(draft.sender.phone, draft.sender.country, dials)) e["s-phone"] = phoneMismatch(draft.sender.country);
     req("s-line1", draft.sender.line1, "Enter the street address");
     req("s-city", draft.sender.city);
     req("s-state", draft.sender.state);
     if (international && !draft.sender.country) e["s-country"] = "Choose a country";
     req("r-name", draft.receiver.name);
     if (!toInternationalPhone(draft.receiver.phone, draft.receiver.country, { strict: true })) e["r-phone"] = phoneProblem(draft.receiver.country);
+    else if (!phoneMatchesCountry(draft.receiver.phone, draft.receiver.country, dials)) e["r-phone"] = phoneMismatch(draft.receiver.country);
     req("r-line1", draft.receiver.line1, "Enter the street address");
     req("r-city", draft.receiver.city);
     req("r-state", draft.receiver.state);
@@ -356,6 +403,7 @@ function Wizard({ type, flow }: { type: "interstate" | "international"; flow?: "
       }
       navigate(`/dashboard/shipments/${s.reference}`);
     } catch (err) {
+      if (showAddressProblem(err)) return;
       setSubmitError(err instanceof HttpError ? err.message : "Could not create the shipment. Please try again.");
       setSubmitting(false);
     }
@@ -412,7 +460,8 @@ function Wizard({ type, flow }: { type: "interstate" | "international"; flow?: "
             errors={errors}
             patch={patch}
             patchParty={patchParty}
-            onNext={() => validatePackage() && go("Contents")}
+            onNext={checkAddresses}
+            checking={checking}
           />
         ) : step === "Contents" ? (
           <ContentsStep
@@ -435,7 +484,7 @@ function Wizard({ type, flow }: { type: "interstate" | "international"; flow?: "
             onNext={() => validateHandover() && go(international ? "Rates" : "Review")}
           />
         ) : step === "Rates" ? (
-          <RatesStep draft={draft} errors={errors} patch={patch} onBack={() => go(abroad ? "Contents" : "Handover")} onNext={() => go("Review")} />
+          <RatesStep draft={draft} errors={errors} patch={patch} onBack={() => go(abroad ? "Contents" : "Handover")} onNext={() => go("Review")} onAddressProblem={showAddressProblem} />
         ) : (
           <ReviewStep
             international={international}
@@ -521,12 +570,14 @@ function PackageStep({
   patch,
   patchParty,
   onNext,
+  checking,
 }: StepCommon & {
   international: boolean;
   senderAbroad?: boolean;
   exportFlow?: boolean;
   patchParty: (who: "sender" | "receiver", p: Partial<PartyForm>) => void;
   onNext: () => void;
+  checking?: boolean;
 }) {
   return (
     <div className="space-y-5">
@@ -571,8 +622,8 @@ function PackageStep({
         </CardBody>
       </Card>
       <div className="flex justify-end [&>*]:w-full sm:[&>*]:w-auto">
-        <Button size="lg" onClick={onNext}>
-          Continue
+        <Button size="lg" onClick={onNext} loading={checking} disabled={checking}>
+          {checking ? "Checking the details…" : "Continue"}
         </Button>
       </div>
     </div>
@@ -852,8 +903,9 @@ function HandoverStep({
 
 const ratesCache = new Map<string, RateEstimate>();
 
-function RatesStep({ draft, patch, onBack, onNext }: StepCommon & { onBack: () => void; onNext: () => void }) {
-  const party = (p: PartyForm) => ({
+/** A party as the server wants it, with the phone in its full international form. Always built from what is in the form now. */
+function partyBody(p: PartyForm) {
+  return {
     name: p.name.trim(),
     phone: toInternationalPhone(p.phone, p.country, { strict: true }) ?? p.phone.trim(),
     email: p.email.trim() || undefined,
@@ -863,7 +915,11 @@ function RatesStep({ draft, patch, onBack, onNext }: StepCommon & { onBack: () =
     state: p.state.trim(),
     country: p.country,
     zip: p.zip.trim() || undefined,
-  });
+  };
+}
+
+function RatesStep({ draft, patch, onBack, onNext, onAddressProblem }: StepCommon & { onBack: () => void; onNext: () => void; onAddressProblem: (err: unknown) => boolean }) {
+  const party = partyBody;
   // The real route, size and items: the carrier prices the shipment it will actually be asked to move.
   const body = {
     shipmentType: "international",
@@ -900,7 +956,10 @@ function RatesStep({ draft, patch, onBack, onNext }: StepCommon & { onBack: () =
         if (!cancelled) setState({ loading: false, data });
       })
       .catch((err) => {
-        if (!cancelled) setState({ loading: false, error: err instanceof HttpError ? err.message : "We could not get carrier rates right now." });
+        if (cancelled) return;
+        // A bad phone, state, city or postcode sends the person back to that field.
+        if (onAddressProblem(err)) return;
+        setState({ loading: false, error: err instanceof HttpError ? err.message : "We could not get carrier rates right now." });
       });
     return () => {
       cancelled = true;

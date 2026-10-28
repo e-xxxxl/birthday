@@ -15,6 +15,7 @@ import {
   ShipmentTimeline,
   shipmentKindLabel,
 } from "@/components/shipping/ShipmentBits";
+import { ContactNumbers } from "@/components/shipping/ContactNumbers";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http, HttpError } from "@/lib/http";
@@ -333,6 +334,7 @@ export function ShipmentDetailPage() {
               ) : null}
             </div>
           </InfoCard>
+          <ContactNumbers shipment={s} base="/api/shipments" onUpdated={() => reload()} />
         </div>
 
         <div className="space-y-6">

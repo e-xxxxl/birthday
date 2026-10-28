@@ -15,6 +15,7 @@ import {
   ShipmentStatusBadge,
   ShipmentTimeline,
 } from "@/components/shipping/ShipmentBits";
+import { ContactNumbers } from "@/components/shipping/ContactNumbers";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http, HttpError } from "@/lib/http";
@@ -443,6 +444,7 @@ export function AdminShipmentDetailPage() {
               ) : null}
             </div>
           </InfoCard>
+          <ContactNumbers shipment={s} base={base} onUpdated={() => reload()} />
         </div>
 
         <div className="space-y-6">

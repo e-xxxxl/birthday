@@ -42,6 +42,10 @@ export type Shipment = {
   reference: string;
   /** International only: "export" (from Nigeria, through our office) or "global" (any country to any country). */
   flow?: "export" | "global";
+  /** A detail of an address the carrier refused, in plain words. The customer can correct it. */
+  addressProblem?: string;
+  /** False once the carrier has the shipment and a phone number can no longer be changed. */
+  contactEditable?: boolean;
   shipmentType: ShipmentType;
   status: ShipmentStatus;
   createdAt?: string;

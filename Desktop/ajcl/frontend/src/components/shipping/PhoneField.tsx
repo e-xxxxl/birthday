@@ -32,6 +32,31 @@ function loadDials(): Promise<Dial[]> {
 
 const digits = (s: string) => s.replace(/\D/g, "");
 
+/** Country code to dial code ("US" to "1"), once the list has loaded; null until then. */
+export function useDialCodes(): Record<string, string> | null {
+  const [map, setMap] = useState<Record<string, string> | null>(null);
+  useEffect(() => {
+    let live = true;
+    loadDials()
+      .then((list) => live && setMap(Object.fromEntries(list.map((d) => [d.code, d.dial]))))
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
+  return map;
+}
+
+/** Whether "+<dial><number>" starts with the dial code of the address country. True when that cannot be told. */
+export function phoneMatchesCountry(phone: string, country: string, dials: Record<string, string> | null): boolean {
+  const dial = dials?.[country.toUpperCase()];
+  const all = digits(phone);
+  if (!dial || !all) return true;
+  if (all.startsWith(dial)) return true;
+  // North American numbers share the code 1 whatever the island or state.
+  return dial.startsWith("1") && all.startsWith("1");
+}
+
 /** Split "+2348031234567" into its dial code and the rest, using the longest dial code that matches. */
 function split(value: string, dials: Dial[], fallbackDial: string): { dial: string; national: string } {
   const v = value.trim();

@@ -3,7 +3,7 @@ const IMAGES: Record<string, string> = {
   bike: "/bike.jpeg",
   "mini-van": "/minivan.jpeg",
   "mini-truck": "/minitruck.jpeg",
-  "cargo-van": "/vehicles/cargo-van.jpeg",
+  "cargo-van": "/vehicles/cargo-van.png",
 };
 
 export function vehicleImage(slug: string): string {

@@ -137,7 +137,7 @@ export function VehicleStep({ goNext, goBack, config }: WizardStepProps) {
 
             <div className="mt-4 space-y-3">
               {loading && !quote
-                ? [0, 1, 2].map((i) => <Skeleton key={i} className="h-28 w-full rounded-sm" />)
+                ? [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-28 w-full rounded-sm" />)
                 : quote?.vehicles.map(({ vehicle, price, unitsAvailable, soldOut }) => {
                     const active = draft.vehicleSlug === vehicle.slug;
                     const lowStock =

@@ -855,7 +855,7 @@ function HandoverStep({
               ) : quoteError ? (
                 <Alert tone="danger" className="mt-3">{quoteError}</Alert>
               ) : quoting && !quote ? (
-                <div className="mt-3 space-y-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full rounded-sm" />)}</div>
+                <div className="mt-3 space-y-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full rounded-sm" />)}</div>
               ) : (
                 <div className="mt-3 space-y-3">
                   {quote?.vehicles.map(({ vehicle, price, soldOut }) => {

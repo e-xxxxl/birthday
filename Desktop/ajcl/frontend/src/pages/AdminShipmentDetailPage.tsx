@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { ConfirmDialog } from "@/components/ui/Modal";
 import { AppLink as Link } from "@/components/ui/AppLink";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -31,6 +32,8 @@ export function AdminShipmentDetailPage() {
   const toast = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const navigate = useNavigate();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const base = `/api/office/shipments/${encodeURIComponent(reference)}`;
 
   const { data, loading, error, reload } = useAsync(() => http.get<Result>(base), [reference]);
@@ -517,6 +520,43 @@ export function AdminShipmentDetailPage() {
               >
                 Cancel shipment
               </Button>
+            </InfoCard>
+          ) : null}
+
+          {user?.superAdmin ? (
+            <InfoCard title="Delete shipment">
+              <p className="text-sm text-muted">
+                Removes this shipment for good, together with every payment recorded for it, so its amount no longer counts in revenue. Only a Super Admin can do this.
+              </p>
+              <Button className="mt-3" size="sm" variant="danger" loading={busy === "delete"} onClick={() => setConfirmDelete(true)}>
+                Delete shipment
+              </Button>
+              <ConfirmDialog
+                open={confirmDelete}
+                onClose={() => setConfirmDelete(false)}
+                title={`Delete ${s.reference}?`}
+                confirmLabel="Yes, delete it"
+                loading={busy === "delete"}
+                message={
+                  <div className="space-y-2">
+                    <p>Are you sure? This cannot be undone.</p>
+                    <ul className="list-disc space-y-1 pl-5 text-muted">
+                      <li>The shipment, its history and its notifications are removed.</li>
+                      <li>
+                        Its payments are removed too
+                        {s.shippingPayment?.paid && s.shippingPayment.amount ? ` (${formatNaira(s.shippingPayment.amount)} shipping${pickupFee?.paid ? " plus the pickup fee" : ""})` : ""}, so the amount leaves your revenue.
+                      </li>
+                      {s.handover.pickupBookingReference ? <li>The rider pickup booking {s.handover.pickupBookingReference} is removed.</li> : null}
+                      {["booked", "in_transit"].includes(s.status) ? <li className="font-semibold text-ink">It is already with the carrier. That booking is NOT cancelled with the carrier.</li> : null}
+                    </ul>
+                  </div>
+                }
+                onConfirm={async () => {
+                  const done = await run("delete", () => http.del(base), "Shipment deleted");
+                  setConfirmDelete(false);
+                  if (done) navigate("/admin/shipments", { replace: true });
+                }}
+              />
             </InfoCard>
           ) : null}
 

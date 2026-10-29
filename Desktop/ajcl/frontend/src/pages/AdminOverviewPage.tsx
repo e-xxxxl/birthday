@@ -1,10 +1,15 @@
+import { useState } from "react";
 import { AppLink as Link } from "@/components/ui/AppLink";
+import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { EmptyState, LoadingBlock, Alert } from "@/components/ui/Feedback";
 import { AdminBookingRow } from "@/components/admin/AdminBookingRow";
 import { ShippingAttention } from "@/components/admin/ShippingSummary";
 import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { http } from "@/lib/http";
+import { http, HttpError } from "@/lib/http";
 import { formatNaira } from "@/lib/utils";
 import type { BookingDTO } from "@/types";
 import type { AdminStats, RecentProof } from "@/types/admin";
@@ -12,10 +17,28 @@ import { formatDateTime } from "@/lib/utils";
 
 export function AdminOverviewPage() {
   useDocumentTitle("Admin overview");
+  const toast = useToast();
+  const { user } = useAuth();
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const { data, loading, error, reload } = useAsync(
     () => http.get<{ stats: AdminStats; recent: BookingDTO[]; recentProofs: RecentProof[] }>("/api/admin/stats"),
     [],
   );
+
+  async function resetRevenue() {
+    setResetting(true);
+    try {
+      const r = await http.post<{ clearedTotal: number }>("/api/admin/revenue/reset", { confirm: "RESET" });
+      toast.success("Revenue cleared", `${formatNaira(r.clearedTotal)} was cleared. Totals start again from now.`);
+      setConfirmReset(false);
+      reload();
+    } catch (err) {
+      toast.error("Could not clear revenue", err instanceof HttpError ? err.message : "Please try again.");
+    } finally {
+      setResetting(false);
+    }
+  }
 
   if (loading && !data) return <LoadingBlock />;
   if (error || !data) {
@@ -72,6 +95,35 @@ export function AdminOverviewPage() {
           </Link>
         ))}
       </div>
+
+      {user?.superAdmin ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+          <span>
+            {stats.revenueClearedAt
+              ? `Revenue counted from ${formatDateTime(stats.revenueClearedAt)} (${formatNaira(stats.revenueClearedTotal ?? 0)} was cleared).`
+              : "Revenue counts every successful payment."}
+          </span>
+          <Button size="sm" variant="secondary" onClick={() => setConfirmReset(true)}>
+            Clear revenue
+          </Button>
+        </div>
+      ) : null}
+      <ConfirmDialog
+        open={confirmReset}
+        onClose={() => setConfirmReset(false)}
+        onConfirm={resetRevenue}
+        loading={resetting}
+        title="Clear all revenue?"
+        confirmLabel="Yes, clear revenue"
+        message={
+          <div className="space-y-2">
+            <p>
+              Are you sure? Total revenue ({formatNaira(stats.revenue)}) and revenue this month ({formatNaira(stats.revenueThisMonth)}) go back to {formatNaira(0)} and count again only from now.
+            </p>
+            <p className="text-muted">Payment records themselves are kept for your audit trail and any dispute. To remove a specific payment, delete its shipment or booking.</p>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <div className="min-w-0 rounded-2xl border border-line bg-paper shadow-card p-4 sm:p-5">

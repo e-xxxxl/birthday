@@ -77,6 +77,20 @@ export const VEHICLE_SEEDS: VehicleSeed[] = [
     active: true,
     sortOrder: 3,
   },
+  {
+    slug: "cargo-van",
+    name: "Cargo Van",
+    description:
+      "Full-size cargo van for bulk loads, stock, equipment and large boxes up to 1,000 kg.",
+    image: "/vehicles/cargo-van.jpeg",
+    pricePerKm: 1500,
+    basePrice: 0,
+    minimumFare: 0,
+    capacity: "Up to 1,000 kg · bulk cargo & stock",
+    averageSpeedKmh: 27,
+    active: true,
+    sortOrder: 4,
+  },
 ];
 
 /**

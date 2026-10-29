@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 const SERVICES: { title: string; text: string; points: string[]; image: MediaKey; icon: IconName; href: string; cta: string }[] = [
   {
     title: "Local Delivery",
-    text: "Book a bike, mini van or mini truck for same-day pickup and delivery inside your city. Pay securely online and follow the rider as the job moves.",
-    points: ["Bike, mini van or mini truck", "The fare is shown before you pay", "Live tracking and photo proof"],
+    text: "Book a bike, mini van, cargo van or mini truck for same-day pickup and delivery inside your city. Pay securely online and follow the rider as the job moves.",
+    points: ["Bike, mini van, cargo van or mini truck", "The fare is shown before you pay", "Live tracking and photo proof"],
     image: "scooter",
     icon: "bike",
     href: "/book",

@@ -1,4 +1,4 @@
-/** Line-art icons for the three vehicle classes. Slug-keyed with a fallback. */
+/** Line-art icons for the vehicle classes (bike, van, truck). Slug-keyed with a fallback. */
 export function VehicleIcon({
   slug,
   className = "size-8",

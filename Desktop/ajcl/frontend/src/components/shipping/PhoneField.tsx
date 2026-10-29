@@ -87,7 +87,8 @@ export function PhoneField({
 }) {
   const [dials, setDials] = useState<Dial[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [dial, setDial] = useState("");
+  // The chosen COUNTRY, not the dial code: the US and Canada (and others) share +1, and the list must keep what was picked.
+  const [iso, setIso] = useState("");
   const [national, setNational] = useState("");
   const ready = useRef(false);
   const lastCountry = useRef(country);
@@ -103,13 +104,16 @@ export function PhoneField({
   }, []);
 
   const dialFor = (c: string) => dials?.find((d) => d.code === c.toUpperCase())?.dial ?? "";
+  const dial = dialFor(iso);
+  /** The country to show for a dial code: the address country when it uses that code, else the first that does. */
+  const isoFor = (d: string) => (dialFor(country) === d ? country.toUpperCase() : dials?.find((x) => x.dial === d)?.code ?? "");
 
   // Once the list is here, read what the form already holds (for example the account phone) and tidy it into place.
   useEffect(() => {
     if (!dials || ready.current) return;
     ready.current = true;
     const s = split(value, dials, dialFor(country) || "234");
-    setDial(s.dial);
+    setIso(isoFor(s.dial));
     setNational(s.national);
     if (s.national && `+${s.dial}${s.national}` !== value) onChange(`+${s.dial}${s.national}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,9 +124,9 @@ export function PhoneField({
     if (!dials || !ready.current || lastCountry.current === country) return;
     lastCountry.current = country;
     const d = dialFor(country);
-    if (d && d !== dial) {
-      setDial(d);
-      onChange(national ? `+${d}${national}` : "");
+    if (d) {
+      setIso(country.toUpperCase());
+      if (d !== dial) onChange(national ? `+${d}${national}` : "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country, dials]);
@@ -149,17 +153,17 @@ export function PhoneField({
       <div className="flex gap-2">
         <select
           aria-label={`${label} country code`}
-          value={dial}
+          value={iso}
           disabled={!dials}
           onChange={(e) => {
-            setDial(e.target.value);
-            compose(e.target.value, national);
+            setIso(e.target.value);
+            compose(dialFor(e.target.value), national);
           }}
           className={cn("h-12 w-[7.5rem] shrink-0 rounded-xl border-[1.5px] border-line-strong bg-paper px-2 text-sm", error && "border-[var(--color-danger)]")}
         >
           {!dials ? <option value="">Loading</option> : null}
           {dials?.map((d) => (
-            <option key={d.code} value={d.dial}>
+            <option key={d.code} value={d.code} title={d.name}>
               {d.code} +{d.dial}
             </option>
           ))}

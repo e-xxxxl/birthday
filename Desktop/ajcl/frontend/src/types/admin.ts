@@ -18,6 +18,9 @@ export type AdminStats = {
   partnersOwing: number;
   revenue: number;
   revenueThisMonth: number;
+  /** When revenue was last cleared and what it stood at; the totals above count only what was paid after. */
+  revenueClearedAt?: string;
+  revenueClearedTotal?: number;
   customers: number;
   recentBookings: number;
 };

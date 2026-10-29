@@ -226,11 +226,11 @@ export function LandingPage() {
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="inline-block rounded-full bg-sky-soft px-4 py-1.5 text-sm font-bold text-info">Our fleet</span>
           <h2 className="mt-5 text-4xl font-bold md:text-5xl">Pick the vehicle that fits the load</h2>
-          <p className="mt-4 text-muted">Bikes, mini vans and mini trucks. The fare for your route shows before you pay.</p>
+          <p className="mt-4 text-muted">Bikes, mini vans, cargo vans and mini trucks. The fare for your route shows before you pay.</p>
         </Reveal>
-        <div className="mt-24 grid gap-x-8 gap-y-20 md:grid-cols-3">
+        <div className="mt-24 grid gap-x-8 gap-y-20 sm:grid-cols-2 lg:grid-cols-4">
           {loading && vehicles.length === 0
-            ? [0, 1, 2].map((i) => <Skeleton key={i} className="h-72 rounded-3xl" />)
+            ? [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-72 rounded-3xl" />)
             : vehicles.map((v, i) => (
                 <Reveal key={v.slug} delay={i * 110} className="relative rounded-3xl bg-surface px-7 pb-8 pt-0 text-center">
                   <div className="relative mx-auto -mt-16 grid size-52 place-items-center rounded-full bg-sky-soft">

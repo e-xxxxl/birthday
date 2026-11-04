@@ -660,7 +660,7 @@ function ContentsStep({
             <p className="mt-1 text-sm text-muted">
               {international
                 ? "List each item with its value. The carrier uses this for customs. An HS code is optional."
-                : "List the items, so the carrier has an accurate description. This is optional."}
+                : "List the items, so we have an accurate description. This is optional."}
             </p>
           </div>
           {errors.items ? <Alert tone="danger">{errors.items}</Alert> : null}
@@ -1130,6 +1130,10 @@ function ReviewStep({
             </p>
           </CardBody>
         </Card>
+      ) : !international ? (
+        <Alert tone="info" title="What happens next">
+          We weigh your package and send you our price here. Once you pay, a driver takes it to your receiver. You will get the driver's phone number and delivery updates on your shipment page.
+        </Alert>
       ) : international ? (
         <Alert tone="info" title="You can pay straight away">
           After you submit, you will see the carrier prices and can pay right away. When we weigh your package at our office, if the weight is different and higher, you will be asked to pay the additional fee before it ships.

@@ -53,7 +53,7 @@ function ShipmentRow({ s }: { s: Shipment }) {
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {needsPayment(s) ? <span className="text-xs font-bold text-[var(--color-warning)]">Payment due</span> : null}
-        <ShipmentStatusBadge status={s.status} />
+        <ShipmentStatusBadge status={s.status} shipmentType={s.shipmentType} />
       </div>
     </Link>
   );

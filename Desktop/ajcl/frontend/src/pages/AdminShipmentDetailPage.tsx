@@ -21,7 +21,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http, HttpError } from "@/lib/http";
 import { formatDateTime, formatNaira } from "@/lib/utils";
-import { SHIPMENT_STATUS_META, MAX_AUTO_QUOTE_KG } from "@/config/shipping";
+import { shipmentStatusMeta, MAX_AUTO_QUOTE_KG } from "@/config/shipping";
 import type { Shipment, QuoteOption } from "@/types/shipping";
 
 type Result = { shipment: Shipment };
@@ -50,6 +50,10 @@ export function AdminShipmentDetailPage() {
   const [refund, setRefund] = useState({ target: "pickup_fee", amount: "", reason: "", reference: "" });
   const [cancelReason, setCancelReason] = useState("");
   const [offline, setOffline] = useState({ rateId: "", note: "" });
+  // Interstate shipments are run by hand: a price, then a driver, then updates.
+  const [price, setPrice] = useState({ amount: "", deliveryTime: "", note: "" });
+  const [driver, setDriver] = useState<{ name: string; phone: string; note: string } | null>(null);
+  const [deliveryNote, setDeliveryNote] = useState("");
 
   if (loading && !data) return <LoadingBlock />;
   if (error || !data) return <Alert tone="danger">{error ?? "Shipment not found."}</Alert>;
@@ -69,6 +73,8 @@ export function AdminShipmentDetailPage() {
     }
   }
 
+  // Interstate shipments are run by hand (a price, then a driver, then updates). International go through the carrier service.
+  const handRun = s.shipmentType === "interstate";
   const needsReceipt = ["awaiting_dropoff", "awaiting_pickup", "in_transit_to_office"].includes(s.status);
   const canWeigh = ["received_at_office", "weight_confirmed", "quote_sent"].includes(s.status);
   const canQuote = ["weight_confirmed", "quote_sent"].includes(s.status);
@@ -77,10 +83,12 @@ export function AdminShipmentDetailPage() {
   const draftOptions = rates?.options ?? (s.quote.draft ? s.quote.options : []);
   const showCode = s.handover.method === "pickup" && !["pickup_fee_pending", "cancelled"].includes(s.status);
   const canCancel = !["booked", "in_transit", "delivered", "cancelled", "failed"].includes(s.status);
-  const hasManualPaid = s.status === "paid" && selectedOption?.manual;
+  const hasManualPaid = !handRun && s.status === "paid" && selectedOption?.manual;
   const trackedByHand = ["booked", "in_transit"].includes(s.status) && !s.terminal.shipmentId && s.terminal.trackingNumber;
 
   const pickupFee = s.handover.pickupFee;
+  const driverForm = driver ?? { name: s.dispatch?.driverName ?? "", phone: s.dispatch?.driverPhone ?? "", note: s.dispatch?.note ?? "" };
+  const showDelivery = handRun && ["paid", "booked", "in_transit", "delivered"].includes(s.status);
 
   return (
     <div className="space-y-6">
@@ -90,7 +98,7 @@ export function AdminShipmentDetailPage() {
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h1 className="font-mono text-3xl font-bold sm:text-4xl">{s.reference}</h1>
-          <ShipmentStatusBadge status={s.status} />
+          <ShipmentStatusBadge status={s.status} shipmentType={s.shipmentType} />
         </div>
         <p className="mt-1 text-sm text-muted">
           {shipmentKindLabel(s)} ·{" "}
@@ -108,11 +116,34 @@ export function AdminShipmentDetailPage() {
         <Alert tone="info" title="Created on the admin side">
           {s.staff.offlinePayment
             ? `Created by ${s.staff.createdBy}. Booked without an online payment (${s.staff.offlinePayment.note}).`
-            : `Created by ${s.staff.createdBy}. It is saved in Terminal as a draft and nothing has been charged online.`}
+            : handRun
+              ? `Created by ${s.staff.createdBy}. Nothing has been charged online. Set the price, then record the payment (or let the customer pay) and assign a driver.`
+              : `Created by ${s.staff.createdBy}. It is saved in Terminal as a draft and nothing has been charged online.`}
         </Alert>
       ) : null}
 
-      {isAdmin && s.staff?.createdBy && !s.staff.offlinePayment && ["weight_confirmed", "quote_sent"].includes(s.status) ? (
+      {handRun && isAdmin && s.staff?.createdBy && !s.staff.offlinePayment && s.status === "quote_sent" ? (
+        <Card>
+          <CardBody className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold">Record an offline payment</h2>
+              <p className="text-sm text-muted">Use this when the customer paid by transfer or cash, or when it is not charged. It moves the shipment to paid so you can assign a driver.</p>
+            </div>
+            <Input label="How was it paid, or why is it not charged?" required value={offline.note} onChange={(e) => setOffline({ ...offline, note: e.target.value })} placeholder="e.g. Paid by transfer, GTB, 24 Oct" maxLength={300} />
+            <Button
+              loading={busy === "offline"}
+              disabled={offline.note.trim().length < 3}
+              onClick={async () => {
+                if (await run("offline", () => http.post<Result>(`${base}/book-without-payment`, { note: offline.note.trim() }), "Payment recorded")) reload();
+              }}
+            >
+              Record payment
+            </Button>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {!handRun && isAdmin && s.staff?.createdBy && !s.staff.offlinePayment && ["weight_confirmed", "quote_sent"].includes(s.status) ? (
         <Card>
           <CardBody className="space-y-4">
             <div>
@@ -265,7 +296,130 @@ export function AdminShipmentDetailPage() {
             </Card>
           ) : null}
 
-          {canQuote ? (
+          {handRun && canQuote ? (
+            <Card>
+              <CardBody className="space-y-4">
+                <div>
+                  <h2 className="text-2xl font-bold">{s.status === "quote_sent" ? "Update the price" : "Set the price"}</h2>
+                  <p className="text-sm text-muted">
+                    {s.status === "quote_sent"
+                      ? `The customer was given ${formatNaira(s.quote.options[0]?.total ?? 0)}${s.quote.sentAt ? ` on ${formatDateTime(s.quote.sentAt)}` : ""}. Sending a new price replaces it. It can be changed until they pay.`
+                      : `Weighed at ${s.confirmed?.weightKg ?? s.parcel.estimatedWeightKg} kg. Enter what the customer pays to ship this to ${s.receiver.city}, ${s.receiver.state}.`}
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Input label="Price (NGN)" type="number" min="1" value={price.amount} onChange={(e) => setPrice({ ...price, amount: e.target.value })} />
+                  <Input label="Delivery time" value={price.deliveryTime} onChange={(e) => setPrice({ ...price, deliveryTime: e.target.value })} hint="Optional, e.g. 2 to 3 days" />
+                </div>
+                <Input label="Note for the customer" value={price.note} onChange={(e) => setPrice({ ...price, note: e.target.value })} hint="Optional" />
+                <Button
+                  loading={busy === "price"}
+                  disabled={!(Number(price.amount) > 0)}
+                  onClick={async () => {
+                    const body = { manual: { amount: Number(price.amount), deliveryTime: price.deliveryTime || undefined }, note: price.note || undefined };
+                    if (await run("price", () => http.post(`${base}/quote`, body), s.status === "quote_sent" ? "Price updated" : "Price sent to the customer")) {
+                      setPrice({ amount: "", deliveryTime: "", note: "" });
+                      reload();
+                    }
+                  }}
+                >
+                  {s.status === "quote_sent" ? "Update price" : "Send price to customer"}
+                </Button>
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {showDelivery ? (
+            <Card>
+              <CardBody className="space-y-4">
+                <div>
+                  <h2 className="text-2xl font-bold">{s.dispatch ? "Driver and delivery" : "Paid: assign a driver"}</h2>
+                  <p className="text-sm text-muted">
+                    {s.dispatch
+                      ? "The customer sees the driver's number and every update you post here."
+                      : "Add the driver's number. This is what the customer is given instead of a tracking number."}
+                  </p>
+                </div>
+
+                {s.status !== "delivered" ? (
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input label="Driver's name" value={driverForm.name} onChange={(e) => setDriver({ ...driverForm, name: e.target.value })} hint="Optional" />
+                      <Input label="Driver's phone number" required value={driverForm.phone} onChange={(e) => setDriver({ ...driverForm, phone: e.target.value })} placeholder="0803 123 4567" />
+                    </div>
+                    <Input label="Note for the customer" value={driverForm.note} onChange={(e) => setDriver({ ...driverForm, note: e.target.value })} hint="Optional, e.g. vehicle and plate number" />
+                    <Button
+                      loading={busy === "driver"}
+                      disabled={driverForm.phone.trim().length < 7}
+                      onClick={async () => {
+                        const body = { driverName: driverForm.name || undefined, driverPhone: driverForm.phone, note: driverForm.note || undefined };
+                        if (await run("driver", () => http.post(`${base}/dispatch`, body), s.dispatch ? "Driver details updated" : "Driver assigned")) {
+                          setDriver(null);
+                          reload();
+                        }
+                      }}
+                    >
+                      {s.dispatch ? "Update driver details" : "Assign driver"}
+                    </Button>
+                  </div>
+                ) : s.dispatch ? (
+                  <p className="text-sm">
+                    Delivered by {s.dispatch.driverName ? `${s.dispatch.driverName}, ` : ""}
+                    {s.dispatch.driverPhone}.
+                  </p>
+                ) : null}
+
+                {s.dispatch && s.status !== "delivered" ? (
+                  <div className="space-y-3 border-t border-line pt-4">
+                    <Textarea label="Update for the customer" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="e.g. Passed Ore, arriving in Benin by 6pm" />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        loading={busy === "update"}
+                        disabled={deliveryNote.trim().length < 3}
+                        onClick={async () => {
+                          if (await run("update", () => http.post(`${base}/update`, { note: deliveryNote.trim() }), "Update sent")) {
+                            setDeliveryNote("");
+                            reload();
+                          }
+                        }}
+                      >
+                        Post update
+                      </Button>
+                      {s.status === "booked" ? (
+                        <Button
+                          variant="secondary"
+                          loading={busy === "st"}
+                          onClick={async () => {
+                            if (await run("st", () => http.post(`${base}/status`, { status: "in_transit", note: deliveryNote.trim() || undefined }), "Marked on the way")) {
+                              setDeliveryNote("");
+                              reload();
+                            }
+                          }}
+                        >
+                          Mark on the way
+                        </Button>
+                      ) : null}
+                      <Button
+                        loading={busy === "st2"}
+                        onClick={async () => {
+                          if (!window.confirm("Mark this shipment as delivered? The customer is notified.")) return;
+                          if (await run("st2", () => http.post(`${base}/status`, { status: "delivered", note: deliveryNote.trim() || undefined }), "Marked delivered")) {
+                            setDeliveryNote("");
+                            reload();
+                          }
+                        }}
+                      >
+                        Mark delivered
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {!handRun && canQuote ? (
             <Card>
               <CardBody className="space-y-4">
                 <div>
@@ -574,7 +728,7 @@ export function AdminShipmentDetailPage() {
             <ul className="space-y-2 text-xs">
               {[...s.statusHistory].reverse().map((h, i) => (
                 <li key={i}>
-                  <span className="font-semibold">{SHIPMENT_STATUS_META[h.status].label}</span>
+                  <span className="font-semibold">{shipmentStatusMeta(h.status, s.shipmentType).label}</span>
                   <span className="text-muted"> · {formatDateTime(h.at)} · {h.byName ?? h.byRole}</span>
                   {h.note ? <p className="text-muted">{h.note}</p> : null}
                 </li>

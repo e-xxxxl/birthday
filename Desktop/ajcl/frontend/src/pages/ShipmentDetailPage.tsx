@@ -20,7 +20,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http, HttpError } from "@/lib/http";
 import { formatDateTime, formatNaira } from "@/lib/utils";
-import { SHIPMENT_STATUS_META } from "@/config/shipping";
+import { shipmentStatusMeta } from "@/config/shipping";
 import type { Shipment, ShippingConfig } from "@/types/shipping";
 
 /** What we tell an international customer who pays before the parcel is weighed. */
@@ -44,8 +44,10 @@ export function ShipmentDetailPage() {
   if (loading && !data) return <LoadingBlock />;
   if (error || !data) return <Alert tone="danger">{error ?? "Shipment not found."}</Alert>;
   const s = data.shipment;
-  const meta = SHIPMENT_STATUS_META[s.status];
+  const meta = shipmentStatusMeta(s.status, s.shipmentType);
   const international = s.shipmentType === "international";
+  // Interstate is run by hand: the customer sees the driver's number and the office's updates instead of a tracking number.
+  const updates = s.statusHistory.filter((h) => h.note && h.byRole !== "system" && ["paid", "booked", "in_transit", "delivered"].includes(h.status)).reverse();
   const pickupFee = s.handover.pickupFee;
   // A carrier picked in the wizard is already selected here.
   let chosenInWizard: string | undefined;
@@ -124,7 +126,7 @@ export function ShipmentDetailPage() {
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h1 className="font-mono text-3xl font-bold sm:text-4xl">{s.reference}</h1>
-          <ShipmentStatusBadge status={s.status} />
+          <ShipmentStatusBadge status={s.status} shipmentType={s.shipmentType} />
         </div>
         <p className="mt-1 text-sm text-muted">
           {shipmentKindLabel(s)} shipment{s.createdAt ? ` · created ${formatDateTime(s.createdAt)}` : ""}
@@ -234,9 +236,10 @@ export function ShipmentDetailPage() {
             <Card>
               <CardBody className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-bold">Choose how to ship</h2>
+                  <h2 className="text-2xl font-bold">{international ? "Choose how to ship" : "Your shipping price"}</h2>
                   <p className="text-sm text-muted">
-                    {s.confirmed ? `Weighed at ${s.confirmed.weightKg} kg, billed as ${s.quote.billedWeightKg} kg.` : `Priced for ${s.parcel.estimatedWeightKg} kg.`}
+                    {s.confirmed ? `Weighed at ${s.confirmed.weightKg} kg${international ? `, billed as ${s.quote.billedWeightKg} kg` : ""}.` : `Priced for ${s.parcel.estimatedWeightKg} kg.`}
+                    {!international && s.quote.options[0]?.manual ? " This is our price for taking it to your receiver." : ""}
                   </p>
                 </div>
                 <div role="radiogroup" className="space-y-3">
@@ -261,7 +264,52 @@ export function ShipmentDetailPage() {
 
           {s.status === "booking_failed" ? <Alert tone="warning">{meta.description}</Alert> : null}
 
-          {["booked", "in_transit", "delivered", "failed"].includes(s.status) ? (
+          {!international && s.status === "paid" ? (
+            <Alert tone="info" title="We are arranging a driver">
+              Payment received. We will add your driver's name and phone number here as soon as one is assigned.
+            </Alert>
+          ) : null}
+
+          {!international && ["booked", "in_transit", "delivered", "failed"].includes(s.status) ? (
+            <Card>
+              <CardBody className="space-y-3 text-sm">
+                <h2 className="text-2xl font-bold">Your driver</h2>
+                {s.dispatch ? (
+                  <div className="space-y-1">
+                    {s.dispatch.driverName ? (
+                      <p>
+                        <span className="text-muted">Name:</span> <strong>{s.dispatch.driverName}</strong>
+                      </p>
+                    ) : null}
+                    <p>
+                      <span className="text-muted">Phone:</span>{" "}
+                      <a href={`tel:${s.dispatch.driverPhone}`} className="text-lg font-bold underline">
+                        {s.dispatch.driverPhone}
+                      </a>
+                    </p>
+                    {s.dispatch.note ? <p className="text-muted">{s.dispatch.note}</p> : null}
+                  </div>
+                ) : (
+                  <p className="text-muted">The driver's details will show here.</p>
+                )}
+                {updates.length > 0 ? (
+                  <ul className="space-y-2 border-t border-line pt-3">
+                    {updates.map((u, i) => (
+                      <li key={i} className="flex gap-3">
+                        <span className="mt-1.5 size-2 shrink-0 rounded-sm bg-ink" />
+                        <div>
+                          <p className="font-semibold">{u.note}</p>
+                          <p className="text-xs text-muted">{formatDateTime(u.at)}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {international && ["booked", "in_transit", "delivered", "failed"].includes(s.status) ? (
             <Card>
               <CardBody className="space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-3">

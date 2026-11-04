@@ -112,7 +112,7 @@ export function AdminShipmentsPage() {
               <p className="text-xs text-muted">{s.createdAt ? formatDate(s.createdAt) : ""}</p>
             </div>
             <div className="flex flex-col items-start gap-1 sm:items-end">
-              <ShipmentStatusBadge status={s.status} />
+              <ShipmentStatusBadge status={s.status} shipmentType={s.shipmentType} />
               {s.status === "paid" && !s.terminal.trackingNumber ? <span className="text-xs font-semibold text-[var(--color-warning)]">Waiting to be booked on Terminal</span> : null}
             </div>
           </Link>

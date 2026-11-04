@@ -18,10 +18,10 @@ const OPTIONS: { href: string; title: string; where: string; body: string; image
     href: "/send/interstate",
     title: "Interstate shipping",
     where: "Any state in Nigeria",
-    body: "Drop the parcel at our office or have a rider collect it. We weigh it, then you choose a carrier.",
+    body: "Drop the parcel at our office or have a rider collect it. We weigh it and send you our price. Pay, and a driver takes it to your receiver.",
     image: "truckRoad",
     icon: "truck",
-    facts: ["Pickup or drop-off", "Carrier options", "Tracking number"],
+    facts: ["Pickup or drop-off", "Priced after weighing", "Driver's number"],
   },
   {
     href: "/send/international",

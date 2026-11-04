@@ -102,7 +102,8 @@ export function AdminNewShipmentPage() {
         },
         note: note.trim() || undefined,
       });
-      if (res.draftWarning) toast.error("Saved here, but not fully in Terminal yet", res.draftWarning);
+      if (!international) toast.success("Shipment created. Set its price next.");
+      else if (res.draftWarning) toast.error("Saved here, but not fully in Terminal yet", res.draftWarning);
       else toast.success("Shipment created and saved in Terminal as a draft");
       navigate(`/admin/shipments/${res.shipment.reference}`);
     } catch (err) {
@@ -119,7 +120,9 @@ export function AdminNewShipmentPage() {
         </Link>
         <h1 className="mt-2 text-3xl font-bold sm:text-4xl">New shipment</h1>
         <p className="text-sm text-muted">
-          For a customer at the desk or on the phone. Nothing is charged online: it is saved in Terminal as a draft and the carrier rates are fetched, ready to book.
+          {international
+            ? "For a customer at the desk or on the phone. Nothing is charged online: it is saved in Terminal as a draft and the carrier rates are fetched, ready to book."
+            : "For a customer at the desk or on the phone. Nothing is charged online. You set the price, record the payment, then assign a driver from the shipment page."}
         </p>
       </div>
 
@@ -199,7 +202,7 @@ export function AdminNewShipmentPage() {
           Cancel
         </Button>
         <Button size="lg" onClick={submit} loading={busy}>
-          Create and save in Terminal
+          {international ? "Create and save in Terminal" : "Create shipment"}
         </Button>
       </div>
     </div>

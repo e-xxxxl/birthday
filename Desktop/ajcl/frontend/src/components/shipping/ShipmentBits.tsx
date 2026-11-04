@@ -7,6 +7,7 @@ import {
   SHIPMENT_FLOW_DROPOFF,
   SHIPMENT_FLOW_PICKUP,
   SHIPMENT_STATUS_META,
+  shipmentStatusMeta,
   type ShipmentStatus,
 } from "@/config/shipping";
 import type { QuoteOption, Shipment } from "@/types/shipping";
@@ -17,8 +18,9 @@ export function shipmentKindLabel(s: { shipmentType: string; flow?: "export" | "
   return s.flow === "export" ? "International · Export from Nigeria" : s.flow === "global" ? "International · Global" : "International";
 }
 
-export function ShipmentStatusBadge({ status }: { status: ShipmentStatus }) {
-  const meta = SHIPMENT_STATUS_META[status];
+/** `shipmentType` words interstate (hand-run) statuses their own way, e.g. "Driver assigned". */
+export function ShipmentStatusBadge({ status, shipmentType }: { status: ShipmentStatus; shipmentType?: string }) {
+  const meta = shipmentStatusMeta(status, shipmentType);
   return (
     <Badge tone={meta.tone}>
       <span aria-hidden className="size-1.5 rounded-sm bg-current" />
@@ -83,7 +85,7 @@ export function ShipmentTimeline({ shipment }: { shipment: Shipment }) {
       {flow.map((s, i) => {
         const done = i < position || (i === position && (status === "delivered" || status === "cancelled"));
         const current = i === position && status !== "delivered" && status !== "cancelled";
-        const meta = SHIPMENT_STATUS_META[s];
+        const meta = shipmentStatusMeta(s, shipment.shipmentType);
         const when = at(s);
         return (
           <li key={s} className="relative flex gap-3">

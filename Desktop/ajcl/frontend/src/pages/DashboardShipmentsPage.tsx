@@ -55,7 +55,7 @@ export function DashboardShipmentsPage() {
                 {s.createdAt ? ` · ${formatDate(s.createdAt)}` : ""}
               </p>
             </div>
-            <ShipmentStatusBadge status={s.status} />
+            <ShipmentStatusBadge status={s.status} shipmentType={s.shipmentType} />
           </Link>
         ))}
       </div>

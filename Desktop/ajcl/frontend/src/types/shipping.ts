@@ -46,6 +46,8 @@ export type Shipment = {
   addressProblem?: string;
   /** False once the carrier has the shipment and a phone number can no longer be changed. */
   contactEditable?: boolean;
+  /** Interstate (run by hand): the driver who has the parcel. Shown where international shows a tracking number. */
+  dispatch?: { driverName?: string; driverPhone: string; note?: string; at?: string; byName?: string };
   shipmentType: ShipmentType;
   status: ShipmentStatus;
   createdAt?: string;

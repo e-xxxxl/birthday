@@ -19,7 +19,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http, HttpError } from "@/lib/http";
 import { DELIVERY_TYPES, returnReasonLabel } from "@/config/booking";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateTime, formatNaira } from "@/lib/utils";
 import type { BookingDTO, ProofDTO } from "@/types";
 import type { AdminAuditEntry, AdminPaymentEntry } from "@/types/admin";
 
@@ -198,6 +198,12 @@ export function AdminBookingDetailPage() {
             <CardHeader title="Payments" />
             <CardBody className="space-y-3">
               <PriceBreakdown price={booking.pricing} />
+              {user?.superAdmin && booking.pricing.extraFee ? (
+                <div className="flex items-baseline justify-between gap-4 rounded-sm bg-surface px-3 py-2 text-xs">
+                  <span className="text-muted">Long-distance fee inside this total (only you see this)</span>
+                  <span className="font-mono font-semibold tabular-nums">{formatNaira(booking.pricing.extraFee)}</span>
+                </div>
+              ) : null}
               <div className="space-y-2 border-t border-line pt-3 text-xs">
                 {payments.length === 0 ? (
                   <p className="text-muted">

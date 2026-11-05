@@ -376,17 +376,32 @@ function Wizard({ type, flow }: { type: "interstate" | "international"; flow?: "
       // International with a carrier chosen: ONE payment for the pickup fee (if any) and the chosen carrier's price.
       if (international && draft.carrier && (s.prepay?.available || s.status === "quote_sent")) {
         const option = s.quote.options.find((o) => o.carrierName === draft.carrier);
-        if (option && Math.abs(option.total - (draft.carrierTotal ?? option.total)) < 1) {
+        const pickupShown = s.handover.method === "pickup" ? draft.pickupFee ?? 0 : 0;
+        const pickupNow = s.handover.method === "pickup" ? s.handover.pickupFee?.amount ?? pickupShown : 0;
+        const shown = pickupShown + (draft.carrierTotal ?? option?.total ?? 0);
+        const now = pickupNow + (option?.total ?? 0);
+        if (option && Math.abs(now - shown) < 1) {
           try {
             const pay = await http.post<{ authorizationUrl: string }>(`/api/shipments/${s.reference}/pay`, {
               rateId: option.rateId,
               includePickupFee: s.handover.method === "pickup" ? true : undefined,
+              expectedAmount: shown,
             });
             window.location.href = pay.authorizationUrl;
             return;
-          } catch {
+          } catch (err) {
+            if (err instanceof HttpError && err.details?.amount) {
+              toast.error("The price changed", err.message);
+              navigate(`/dashboard/shipments/${s.reference}`);
+              return;
+            }
             /* fall through: the pickup fee, then the shipment page, offer it again */
           }
+        } else if (option) {
+          // The real price is not the one that was on screen: nothing is charged, and the new price is shown first.
+          toast.error("The price changed", `It is now ${formatNaira(now)}, not ${formatNaira(shown)}. Check it on your shipment page, then pay.`);
+          navigate(`/dashboard/shipments/${s.reference}`);
+          return;
         }
       }
       if (s.handover.method === "pickup" && s.handover.pickupBookingReference) {
@@ -394,10 +409,12 @@ function Wizard({ type, flow }: { type: "interstate" | "international"; flow?: "
         try {
           const pay = await http.post<{ authorizationUrl: string }>("/api/payments/initialize", {
             bookingReference: s.handover.pickupBookingReference,
+            expectedAmount: draft.pickupFee ?? undefined,
           });
           window.location.href = pay.authorizationUrl;
           return;
-        } catch {
+        } catch (err) {
+          if (err instanceof HttpError && err.details?.amount) toast.error("The price changed", err.message);
           /* fall through to the shipment page */
         }
       }

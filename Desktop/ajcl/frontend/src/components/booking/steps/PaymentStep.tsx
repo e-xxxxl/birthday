@@ -61,9 +61,11 @@ export function PaymentStep({ goBack, config }: WizardStepProps) {
     }
 
     setBusy(true);
+    let createdRef: string | undefined;
     try {
       setStage("creating");
       const { booking } = await http.post<{ booking: BookingDTO }>("/api/bookings", parsed.data);
+      createdRef = booking.bookingReference;
 
       if (isPartner) {
         setStage("redirecting");
@@ -76,12 +78,18 @@ export function PaymentStep({ goBack, config }: WizardStepProps) {
       setStage("redirecting");
       const init = await http.post<{ authorizationUrl: string; reference: string }>(
         "/api/payments/initialize",
-        { bookingReference: booking.bookingReference },
+        // The amount on this screen: if the amount to charge is different, nothing is charged.
+        { bookingReference: booking.bookingReference, expectedAmount: priced?.price.total },
       );
 
       // Hand off to Paystack.
       window.location.href = init.authorizationUrl;
     } catch (err) {
+      if (createdRef && err instanceof HttpError && err.details?.amount) {
+        toast.error("The price changed", err.message);
+        navigate(`/dashboard/bookings/${createdRef}`);
+        return;
+      }
       setBusy(false);
       setStage("idle");
       setError(

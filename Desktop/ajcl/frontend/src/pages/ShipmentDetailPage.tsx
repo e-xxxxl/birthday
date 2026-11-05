@@ -65,11 +65,13 @@ export function ShipmentDetailPage() {
     try {
       const res = await http.post<{ authorizationUrl: string }>("/api/payments/initialize", {
         bookingReference: s.handover.pickupBookingReference,
+        expectedAmount: pickupFee?.amount,
       });
       window.location.href = res.authorizationUrl;
     } catch (err) {
       toast.error("Could not start payment", err instanceof HttpError ? err.message : undefined);
       setBusy(null);
+      if (err instanceof HttpError && err.details?.amount) reload();
     }
   }
 
@@ -81,11 +83,20 @@ export function ShipmentDetailPage() {
     }
     setBusy("shipping");
     try {
-      const res = await http.post<{ authorizationUrl: string }>(`/api/shipments/${s.reference}/pay`, { rateId, includePickupFee: bundlePickup ? true : undefined });
+      // What this page showed for this payment: the price (or only the extra fee), plus the pickup fee when it is in the same charge.
+      const option = s.quote.options.find((o) => o.rateId === rateId);
+      const shown = s.prepay?.paid && s.status === "quote_sent" ? s.prepay.additionalDue : option?.total;
+      const expectedAmount = shown == null ? undefined : shown + (bundlePickup ? pickupFee?.amount ?? 0 : 0);
+      const res = await http.post<{ authorizationUrl: string }>(`/api/shipments/${s.reference}/pay`, {
+        rateId,
+        includePickupFee: bundlePickup ? true : undefined,
+        expectedAmount,
+      });
       window.location.href = res.authorizationUrl;
     } catch (err) {
       toast.error("Could not start payment", err instanceof HttpError ? err.message : undefined);
       setBusy(null);
+      if (err instanceof HttpError && err.details?.amount) reload();
     }
   }
 

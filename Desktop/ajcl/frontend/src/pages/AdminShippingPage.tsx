@@ -69,6 +69,19 @@ export function AdminShippingPage() {
     }
   }
 
+  const [emailTo, setEmailTo] = useState("");
+  const [emailResult, setEmailResult] = useState<{ sent: boolean; to: string; from: string; reason: string | null; adminUrl: string | null; officeInboxes: string[] } | null>(null);
+  async function testEmail() {
+    setBusy("email");
+    try {
+      setEmailResult(await http.post<NonNullable<typeof emailResult>>("/api/admin/email/test", { to: emailTo.trim() || undefined }));
+    } catch (err) {
+      toast.error("Could not run the email check", err instanceof HttpError ? err.message : undefined);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function webhookStatus() {
     setBusy("hook");
     try {
@@ -151,6 +164,26 @@ export function AdminShippingPage() {
               </p>
               <p className="mt-1 font-mono text-xs text-muted">
                 {check.baseUrl} · key {check.keyMasked}
+              </p>
+            </div>
+          ) : null}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="Email check" description="Sends a real test email, and tells you exactly why it did not arrive if it did not." />
+        <CardBody className="space-y-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <Input label="Send the test to" type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} hint="Leave empty to send it to you" containerClassName="min-w-[16rem] flex-1" />
+            <Button size="sm" variant="secondary" onClick={testEmail} loading={busy === "email"}>
+              Send test email
+            </Button>
+          </div>
+          {emailResult ? (
+            <div className={emailResult.sent ? "border-l-4 border-[var(--color-success)] bg-[var(--color-success-soft)] p-3" : "border-l-4 border-[var(--color-danger)] bg-[var(--color-danger-soft)] p-3"}>
+              <p className="text-sm font-medium">{emailResult.sent ? `Sent to ${emailResult.to}. Check the inbox (and spam).` : `Not sent: ${emailResult.reason}`}</p>
+              <p className="mt-1 break-all font-mono text-xs text-muted">
+                From {emailResult.from} · admin site {emailResult.adminUrl ?? "same as the main site"} · desk inboxes {emailResult.officeInboxes.join(", ") || "none"}
               </p>
             </div>
           ) : null}

@@ -54,6 +54,9 @@ export function AdminShipmentDetailPage() {
   const [price, setPrice] = useState({ amount: "", deliveryTime: "", note: "" });
   const [driver, setDriver] = useState<{ name: string; phone: string; note: string } | null>(null);
   const [deliveryNote, setDeliveryNote] = useState("");
+  // Super Admin: a payment happened but the system never saw it.
+  const [markPaid, setMarkPaid] = useState<{ target: "shipping" | "pickup_fee"; rateId: string; note: string }>({ target: "shipping", rateId: "", note: "" });
+  const [confirmPaid, setConfirmPaid] = useState(false);
 
   if (loading && !data) return <LoadingBlock />;
   if (error || !data) return <Alert tone="danger">{error ?? "Shipment not found."}</Alert>;
@@ -89,6 +92,13 @@ export function AdminShipmentDetailPage() {
   const pickupFee = s.handover.pickupFee;
   const driverForm = driver ?? { name: s.dispatch?.driverName ?? "", phone: s.dispatch?.driverPhone ?? "", note: s.dispatch?.note ?? "" };
   const showDelivery = handRun && ["paid", "booked", "in_transit", "delivered"].includes(s.status);
+  const shippingUnpaid = s.status === "quote_sent" ? !s.shippingPayment?.paid || (s.prepay?.additionalDue ?? 0) > 0 : Boolean(s.prepay?.available);
+  const pickupUnpaid = s.status === "pickup_fee_pending" && Boolean(pickupFee) && !pickupFee?.paid;
+  const markTarget: "shipping" | "pickup_fee" = markPaid.target === "pickup_fee" && pickupUnpaid ? "pickup_fee" : shippingUnpaid ? "shipping" : "pickup_fee";
+  const markOptions = s.quote.options.filter((o) => !o.manual || handRun || s.status === "quote_sent");
+  const markOption = markOptions.find((o) => o.rateId === markPaid.rateId) ?? (markOptions.length === 1 ? markOptions[0] : undefined);
+  const markAmount = markTarget === "pickup_fee" ? pickupFee?.amount ?? 0 : (s.prepay?.additionalDue ?? 0) > 0 ? s.prepay?.additionalDue ?? 0 : markOption?.total ?? 0;
+  const canMarkPaid = Boolean(user?.superAdmin) && (shippingUnpaid || pickupUnpaid) && s.status !== "cancelled";
 
   return (
     <div className="space-y-6">
@@ -184,6 +194,92 @@ export function AdminShipmentDetailPage() {
             >
               Book on Terminal
             </Button>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {canMarkPaid ? (
+        <Card>
+          <CardBody className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold">Mark as paid</h2>
+              <p className="text-sm text-muted">
+                Use this when the customer really paid but the system never saw it (a bank transfer, or the card was charged and the payment did not come through). It records the payment, counts it in revenue, and moves the shipment on exactly as a normal payment would.
+              </p>
+            </div>
+            {shippingUnpaid && pickupUnpaid ? (
+              <div className="flex flex-wrap gap-4 text-sm" role="radiogroup" aria-label="What was paid">
+                {([
+                  ["shipping", "The shipping price"],
+                  ["pickup_fee", "The rider pickup fee"],
+                ] as const).map(([value, label]) => (
+                  <label key={value} className="flex items-center gap-2">
+                    <input type="radio" name="markTarget" checked={markTarget === value} onChange={() => setMarkPaid({ ...markPaid, target: value })} />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            ) : null}
+            {markTarget === "shipping" && markOptions.length > 1 && !(s.prepay?.additionalDue ?? 0) ? (
+              <div role="radiogroup" className="space-y-3">
+                <p className="text-sm font-semibold">Which option did the customer pay for?</p>
+                {markOptions.map((o) => (
+                  <QuoteOptionCard key={o.rateId} option={o} selected={markPaid.rateId === o.rateId} onSelect={() => setMarkPaid({ ...markPaid, rateId: o.rateId })} />
+                ))}
+              </div>
+            ) : null}
+            <Input
+              label="How was it paid? (shown in the record)"
+              required
+              value={markPaid.note}
+              onChange={(e) => setMarkPaid({ ...markPaid, note: e.target.value })}
+              placeholder="e.g. Bank transfer, GTB, ref 123456, 3 Nov"
+              maxLength={300}
+            />
+            <Button
+              variant="danger"
+              loading={busy === "markpaid"}
+              disabled={markPaid.note.trim().length < 3 || (markTarget === "shipping" && !markOption && !(s.prepay?.additionalDue ?? 0))}
+              onClick={() => setConfirmPaid(true)}
+            >
+              Mark as paid{markAmount ? ": " + formatNaira(markAmount) : ""}
+            </Button>
+            <ConfirmDialog
+              open={confirmPaid}
+              onClose={() => setConfirmPaid(false)}
+              title={`Mark ${s.reference} as paid?`}
+              confirmLabel="Yes, it was paid"
+              tone="primary"
+              loading={busy === "markpaid"}
+              message={
+                <div className="space-y-2">
+                  <p>
+                    This records {markAmount ? formatNaira(markAmount) : "the payment"} as paid for {markTarget === "pickup_fee" ? "the pickup fee" : "the shipping price"} and cannot be undone from here.
+                  </p>
+                  <ul className="list-disc space-y-1 pl-5 text-muted">
+                    <li>It counts in your revenue and is kept in the payment records with your name and note.</li>
+                    <li>
+                      {markTarget === "pickup_fee"
+                        ? "The rider pickup goes ahead."
+                        : handRun
+                          ? "The customer is told it is paid and you can assign a driver."
+                          : s.prepay?.available
+                            ? "The shipment is marked as paid in advance."
+                            : "The shipment is booked with the carrier, which uses your carrier wallet."}
+                    </li>
+                  </ul>
+                </div>
+              }
+              onConfirm={async () => {
+                const body = { target: markTarget, rateId: markPaid.rateId || undefined, note: markPaid.note.trim() };
+                const r = await run("markpaid", () => http.post<Result>(`${base}/mark-paid`, body), "Marked as paid");
+                setConfirmPaid(false);
+                if (r) {
+                  setMarkPaid({ target: "shipping", rateId: "", note: "" });
+                  reload();
+                }
+              }}
+            />
           </CardBody>
         </Card>
       ) : null}

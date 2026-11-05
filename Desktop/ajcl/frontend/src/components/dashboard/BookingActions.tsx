@@ -38,10 +38,17 @@ export function BookingActions({ booking }: { booking: BookingDTO }) {
       }
       const init = await http.post<{ authorizationUrl: string }>("/api/payments/initialize", {
         bookingReference: booking.bookingReference,
+        // The amount on this page: if the amount to charge is different, nothing is charged.
+        expectedAmount: booking.pricing.total,
       });
       window.location.href = init.authorizationUrl;
     } catch (err) {
       setPaying(false);
+      if (err instanceof HttpError && err.details?.amount) {
+        setError(`${err.message} The page is refreshing with the new price.`);
+        window.setTimeout(() => window.location.reload(), 2500);
+        return;
+      }
       setError(err instanceof HttpError ? err.message : isPartner ? "Could not place the order." : "Could not start payment.");
     }
   }

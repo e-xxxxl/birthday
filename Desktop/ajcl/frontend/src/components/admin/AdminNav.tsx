@@ -10,10 +10,14 @@ const baseItems = [
   { label: "Riders", href: "/admin/riders" },
   { label: "Partners", href: "/admin/partners" },
   { label: "Shipments", href: "/admin/shipments" },
+  { label: "Quote", href: "/admin/quote" },
   { label: "Vehicles & Pricing", href: "/admin/vehicles" },
 ];
 
-const officeItems = [{ label: "Shipments", href: "/admin/shipments" }];
+const officeItems = [
+  { label: "Shipments", href: "/admin/shipments" },
+  { label: "Quote", href: "/admin/quote" },
+];
 
 export function AdminNav() {
   const pathname = useLocation().pathname;

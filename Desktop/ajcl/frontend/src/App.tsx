@@ -47,6 +47,7 @@ import { ShipmentWizardPage } from "@/pages/ShipmentWizardPage";
 import { DashboardShipmentsPage } from "@/pages/DashboardShipmentsPage";
 import { ShipmentDetailPage } from "@/pages/ShipmentDetailPage";
 import { AdminShipmentsPage } from "@/pages/AdminShipmentsPage";
+import { AdminQuotePage } from "@/pages/AdminQuotePage";
 import { AdminShipmentDetailPage } from "@/pages/AdminShipmentDetailPage";
 import { AdminShippingPage } from "@/pages/AdminShippingPage";
 import { AdminSitePage } from "@/pages/AdminSitePage";
@@ -125,6 +126,7 @@ export function App() {
             <Route path="vehicles" element={<AdminVehiclesPage />} />
             <Route path="team" element={<AdminTeamPage />} />
             <Route path="shipments" element={<AdminShipmentsPage />} />
+            <Route path="quote" element={<AdminQuotePage />} />
             <Route path="shipments/new" element={<AdminNewShipmentPage />} />
             <Route path="shipments/:reference" element={<AdminShipmentDetailPage />} />
             <Route path="shipping" element={<AdminShippingPage />} />

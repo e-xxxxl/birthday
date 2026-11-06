@@ -19,8 +19,8 @@ function AdminShell() {
   const { user } = useAuth();
   const { pathname } = useLocation();
 
-  // An Office Admin only works the shipments desk.
-  if (user?.role === "office_admin" && !pathname.startsWith("/admin/shipments")) {
+  // An Office Admin only works the shipments desk (and may check quotes).
+  if (user?.role === "office_admin" && !pathname.startsWith("/admin/shipments") && !pathname.startsWith("/admin/quote")) {
     return <Navigate to="/admin/shipments" replace />;
   }
 

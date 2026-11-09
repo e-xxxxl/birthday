@@ -21,6 +21,9 @@ export function AdminShippingPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [hook, setHook] = useState<{ url: string; registered: boolean; configured?: boolean; alreadyRegistered?: boolean } | null>(null);
   const [check, setCheck] = useState<{ ok: boolean; status: number; message: string; baseUrl: string; keyMasked: string } | null>(null);
+  // Hooks go above the early returns below, so every render calls the same ones.
+  const [emailTo, setEmailTo] = useState("");
+  const [emailResult, setEmailResult] = useState<{ sent: boolean; to: string; from: string; reason: string | null; adminUrl: string | null; officeInboxes: string[] } | null>(null);
 
   const [tiers, setTiers] = useState<{ minKg: string; maxKg: string; percent: string }[]>([]);
   const [fees, setFees] = useState({ flat: "", surcharge: "", threshold: "" });
@@ -69,8 +72,6 @@ export function AdminShippingPage() {
     }
   }
 
-  const [emailTo, setEmailTo] = useState("");
-  const [emailResult, setEmailResult] = useState<{ sent: boolean; to: string; from: string; reason: string | null; adminUrl: string | null; officeInboxes: string[] } | null>(null);
   async function testEmail() {
     setBusy("email");
     try {

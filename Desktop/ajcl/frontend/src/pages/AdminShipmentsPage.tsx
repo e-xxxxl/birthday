@@ -15,7 +15,7 @@ import type { Shipment } from "@/types/shipping";
 
 type Filter = "todo" | "all" | ShipmentStatus;
 
-const TODO: ShipmentStatus[] = ["awaiting_dropoff", "awaiting_pickup", "in_transit_to_office", "received_at_office", "weight_confirmed", "paid", "booking_failed"];
+const TODO: ShipmentStatus[] = ["awaiting_dropoff", "awaiting_pickup", "in_transit_to_office", "received_at_office", "weight_confirmed", "paid", "booking_failed", "delivery_attempted", "delivery_rejected"];
 
 export function AdminShipmentsPage() {
   useDocumentTitle("Shipments desk");
@@ -39,7 +39,7 @@ export function AdminShipmentsPage() {
     { key: "todo", label: "Needs action", n: todoCount },
     { key: "paid", label: "Paid, waiting to be booked", n: counts.paid ?? 0 },
     { key: "all", label: "All" },
-    ...(["quote_sent", "booked", "in_transit", "delivered", "cancelled"] as ShipmentStatus[]).map((s) => ({
+    ...(["quote_sent", "booked", "in_transit", "delivery_attempted", "delivery_rejected", "delivered", "returned", "cancelled"] as ShipmentStatus[]).map((s) => ({
       key: s as Filter,
       label: SHIPMENT_STATUS_META[s].label,
       n: counts[s] ?? 0,

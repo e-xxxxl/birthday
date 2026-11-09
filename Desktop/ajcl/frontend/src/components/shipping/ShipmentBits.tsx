@@ -3,6 +3,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { cn, formatDateTime, formatNaira } from "@/lib/utils";
 import {
   DEFAULT_DISCLAIMER,
+  DELIVERY_PROBLEM_STATUSES,
   SHIPMENT_FLOW_CARRIER,
   SHIPMENT_FLOW_DROPOFF,
   SHIPMENT_FLOW_PICKUP,
@@ -71,7 +72,7 @@ export function ShipmentTimeline({ shipment }: { shipment: Shipment }) {
   const position =
     status === "booking_failed"
       ? flow.indexOf("paid")
-      : status === "failed"
+      : status === "failed" || DELIVERY_PROBLEM_STATUSES.includes(status)
         ? flow.indexOf("in_transit")
         : status === "cancelled"
           ? Math.max(
@@ -116,6 +117,20 @@ export function ShipmentTimeline({ shipment }: { shipment: Shipment }) {
       {status === "booking_failed" ? (
         <li className="rounded-sm bg-[var(--color-warning-soft)] p-3 text-xs text-[var(--color-warning)]">
           {SHIPMENT_STATUS_META.booking_failed.description}
+        </li>
+      ) : null}
+      {DELIVERY_PROBLEM_STATUSES.includes(status) ? (
+        <li
+          className={cn(
+            "rounded-sm p-3 text-xs",
+            status === "delivery_attempted" ? "bg-[var(--color-warning-soft)] text-[var(--color-warning)]" : "bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
+          )}
+        >
+          <strong>{shipmentStatusMeta(status, shipment.shipmentType).label}.</strong> {shipmentStatusMeta(status, shipment.shipmentType).description}
+          {(() => {
+            const why = [...shipment.statusHistory].reverse().find((h) => h.status === status && h.note)?.note;
+            return why ? ` Reason: ${why}` : "";
+          })()}
         </li>
       ) : null}
       {status === "failed" || status === "cancelled" ? (

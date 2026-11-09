@@ -21,7 +21,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { http, HttpError } from "@/lib/http";
 import { formatDateTime, formatNaira } from "@/lib/utils";
-import { shipmentStatusMeta, MAX_AUTO_QUOTE_KG } from "@/config/shipping";
+import { shipmentStatusMeta, MAX_AUTO_QUOTE_KG, DELIVERY_MOVES, DELIVERY_PROBLEM_STATUSES, type ShipmentStatus } from "@/config/shipping";
 import type { Shipment, QuoteOption } from "@/types/shipping";
 
 type Result = { shipment: Shipment };
@@ -78,6 +78,19 @@ export function AdminShipmentDetailPage() {
 
   // Interstate shipments are run by hand (a price, then a driver, then updates). International go through the carrier service.
   const handRun = s.shipmentType === "interstate";
+  async function moveTo(to: ShipmentStatus) {
+    if (isProblem(to) && deliveryNote.trim().length < 3) {
+      toast.error("Say why", "Write the reason first. The customer is shown it.");
+      return;
+    }
+    if ((to === "delivered" || to === "returned") && !window.confirm(to === "delivered" ? "Mark this shipment as delivered? The customer is notified." : "Mark this package as returned to the sender? The customer is notified.")) return;
+    const done = await run("move:" + to, () => http.post(base + "/status", { status: to, note: deliveryNote.trim() || undefined }), MOVE_LABEL[to] ?? "Updated");
+    if (done) {
+      setDeliveryNote("");
+      reload();
+    }
+  }
+
   const needsReceipt = ["awaiting_dropoff", "awaiting_pickup", "in_transit_to_office"].includes(s.status);
   const canWeigh = ["received_at_office", "weight_confirmed", "quote_sent"].includes(s.status);
   const canQuote = ["weight_confirmed", "quote_sent"].includes(s.status);
@@ -85,13 +98,24 @@ export function AdminShipmentDetailPage() {
   const selectedOption = s.quote.options.find((o) => o.rateId === s.quote.selectedRateId);
   const draftOptions = rates?.options ?? (s.quote.draft ? s.quote.options : []);
   const showCode = s.handover.method === "pickup" && !["pickup_fee_pending", "cancelled"].includes(s.status);
-  const canCancel = !["booked", "in_transit", "delivered", "cancelled", "failed"].includes(s.status);
+  const canCancel = !["booked", "in_transit", "delivery_attempted", "delivery_rejected", "delivered", "returned", "cancelled", "failed"].includes(s.status);
   const hasManualPaid = !handRun && s.status === "paid" && selectedOption?.manual;
-  const trackedByHand = ["booked", "in_transit"].includes(s.status) && !s.terminal.shipmentId && s.terminal.trackingNumber;
+  const trackedByHand = ["booked", "in_transit", "delivery_attempted", "delivery_rejected"].includes(s.status) && !s.terminal.shipmentId && s.terminal.trackingNumber;
+  // Where this shipment can go next (the same list the server enforces), and what to call each move.
+  const moves = DELIVERY_MOVES[s.status] ?? [];
+  const again = s.status === "delivery_attempted" || s.status === "delivery_rejected";
+  const MOVE_LABEL: Partial<Record<ShipmentStatus, string>> = {
+    in_transit: again ? "Send out again" : "Mark on the way",
+    delivery_attempted: "Delivery attempted",
+    delivery_rejected: "Delivery rejected",
+    delivered: "Mark delivered",
+    returned: "Package returned",
+  };
+  const isProblem = (m: ShipmentStatus) => DELIVERY_PROBLEM_STATUSES.includes(m);
 
   const pickupFee = s.handover.pickupFee;
   const driverForm = driver ?? { name: s.dispatch?.driverName ?? "", phone: s.dispatch?.driverPhone ?? "", note: s.dispatch?.note ?? "" };
-  const showDelivery = handRun && ["paid", "booked", "in_transit", "delivered"].includes(s.status);
+  const showDelivery = handRun && ["paid", "booked", "in_transit", "delivery_attempted", "delivery_rejected", "delivered", "returned"].includes(s.status);
   const shippingUnpaid = s.status === "quote_sent" ? !s.shippingPayment?.paid || (s.prepay?.additionalDue ?? 0) > 0 : Boolean(s.prepay?.available);
   const pickupUnpaid = s.status === "pickup_fee_pending" && Boolean(pickupFee) && !pickupFee?.paid;
   const markTarget: "shipping" | "pickup_fee" = markPaid.target === "pickup_fee" && pickupUnpaid ? "pickup_fee" : shippingUnpaid ? "shipping" : "pickup_fee";
@@ -437,7 +461,7 @@ export function AdminShipmentDetailPage() {
                   </p>
                 </div>
 
-                {s.status !== "delivered" ? (
+                {!["delivered", "returned"].includes(s.status) ? (
                   <div className="space-y-3">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Input label="Driver's name" value={driverForm.name} onChange={(e) => setDriver({ ...driverForm, name: e.target.value })} hint="Optional" />
@@ -460,12 +484,12 @@ export function AdminShipmentDetailPage() {
                   </div>
                 ) : s.dispatch ? (
                   <p className="text-sm">
-                    Delivered by {s.dispatch.driverName ? `${s.dispatch.driverName}, ` : ""}
+                    {s.status === "returned" ? "Returned to the sender. Driver: " : "Delivered by "}{s.dispatch.driverName ? `${s.dispatch.driverName}, ` : ""}
                     {s.dispatch.driverPhone}.
                   </p>
                 ) : null}
 
-                {s.dispatch && s.status !== "delivered" ? (
+                {s.dispatch && !["delivered", "returned"].includes(s.status) ? (
                   <div className="space-y-3 border-t border-line pt-4">
                     <Textarea label="Update for the customer" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="e.g. Passed Ore, arriving in Benin by 6pm" />
                     <div className="flex flex-wrap gap-2">
@@ -482,33 +506,19 @@ export function AdminShipmentDetailPage() {
                       >
                         Post update
                       </Button>
-                      {s.status === "booked" ? (
+                      {moves.map((m) => (
                         <Button
-                          variant="secondary"
-                          loading={busy === "st"}
-                          onClick={async () => {
-                            if (await run("st", () => http.post(`${base}/status`, { status: "in_transit", note: deliveryNote.trim() || undefined }), "Marked on the way")) {
-                              setDeliveryNote("");
-                              reload();
-                            }
-                          }}
+                          key={m}
+                          variant={m === "delivered" ? undefined : isProblem(m) ? "danger" : "secondary"}
+                          loading={busy === "move:" + m}
+                          disabled={isProblem(m) && deliveryNote.trim().length < 3}
+                          onClick={() => moveTo(m)}
                         >
-                          Mark on the way
+                          {MOVE_LABEL[m]}
                         </Button>
-                      ) : null}
-                      <Button
-                        loading={busy === "st2"}
-                        onClick={async () => {
-                          if (!window.confirm("Mark this shipment as delivered? The customer is notified.")) return;
-                          if (await run("st2", () => http.post(`${base}/status`, { status: "delivered", note: deliveryNote.trim() || undefined }), "Marked delivered")) {
-                            setDeliveryNote("");
-                            reload();
-                          }
-                        }}
-                      >
-                        Mark delivered
-                      </Button>
+                      ))}
                     </div>
+                    {moves.some(isProblem) ? <p className="text-xs text-muted">For a delivery attempt, a rejection or a return, write the reason above first. The customer sees it.</p> : null}
                   </div>
                 ) : null}
               </CardBody>
@@ -652,22 +662,29 @@ export function AdminShipmentDetailPage() {
               <div className="space-y-1 text-sm">
                 <p>{s.terminal.carrierName} · {s.terminal.trackingNumber}</p>
                 {s.terminal.shipmentId ? <p className="text-muted">Terminal shipment {s.terminal.shipmentId}{s.terminal.status ? ` · ${s.terminal.status}` : ""}</p> : null}
+                {trackedByHand ? (
+                  <Input label="Note for the customer" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} hint="Needed for a delivery attempt, a rejection or a return" />
+                ) : null}
                 <div className="mt-2 flex flex-wrap gap-2">
                   {s.terminal.shipmentId ? (
                     <Button size="sm" variant="secondary" loading={busy === "sync"} onClick={async () => { if (await run("sync", () => http.post(`${base}/sync`), "Tracking updated")) reload(); }}>
                       Sync tracking
                     </Button>
                   ) : null}
-                  {trackedByHand && s.status === "booked" ? (
-                    <Button size="sm" variant="secondary" loading={busy === "st"} onClick={async () => { if (await run("st", () => http.post(`${base}/status`, { status: "in_transit" }))) reload(); }}>
-                      Mark in transit
-                    </Button>
-                  ) : null}
-                  {trackedByHand ? (
-                    <Button size="sm" variant="secondary" loading={busy === "st2"} onClick={async () => { if (await run("st2", () => http.post(`${base}/status`, { status: "delivered" }))) reload(); }}>
-                      Mark delivered
-                    </Button>
-                  ) : null}
+                  {trackedByHand
+                    ? moves.map((m) => (
+                        <Button
+                          key={m}
+                          size="sm"
+                          variant={isProblem(m) ? "danger" : "secondary"}
+                          loading={busy === "move:" + m}
+                          disabled={isProblem(m) && deliveryNote.trim().length < 3}
+                          onClick={() => moveTo(m)}
+                        >
+                          {MOVE_LABEL[m]}
+                        </Button>
+                      ))
+                    : null}
                 </div>
               </div>
             </InfoCard>

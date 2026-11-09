@@ -32,6 +32,8 @@ const SHIPMENT_ACTIVE = [
   "booked",
   "booking_failed",
   "in_transit",
+  "delivery_attempted",
+  "delivery_rejected",
 ];
 const needsPayment = (s: Shipment) => ["pickup_fee_pending", "quote_sent"].includes(s.status) || Boolean(s.prepay?.available);
 

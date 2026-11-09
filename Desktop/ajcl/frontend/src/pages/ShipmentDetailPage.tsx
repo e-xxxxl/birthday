@@ -47,7 +47,7 @@ export function ShipmentDetailPage() {
   const meta = shipmentStatusMeta(s.status, s.shipmentType);
   const international = s.shipmentType === "international";
   // Interstate is run by hand: the customer sees the driver's number and the office's updates instead of a tracking number.
-  const updates = s.statusHistory.filter((h) => h.note && h.byRole !== "system" && ["paid", "booked", "in_transit", "delivered"].includes(h.status)).reverse();
+  const updates = s.statusHistory.filter((h) => h.note && h.byRole !== "system" && ["paid", "booked", "in_transit", "delivery_attempted", "delivery_rejected", "delivered", "returned"].includes(h.status)).reverse();
   const pickupFee = s.handover.pickupFee;
   // A carrier picked in the wizard is already selected here.
   let chosenInWizard: string | undefined;
@@ -275,13 +275,23 @@ export function ShipmentDetailPage() {
 
           {s.status === "booking_failed" ? <Alert tone="warning">{meta.description}</Alert> : null}
 
+          {["delivery_attempted", "delivery_rejected", "returned"].includes(s.status) ? (
+            <Alert tone={s.status === "delivery_attempted" ? "warning" : "danger"} title={meta.label}>
+              {meta.description}
+              {(() => {
+                const why = [...s.statusHistory].reverse().find((h) => h.status === s.status && h.note)?.note;
+                return why ? ` Reason: ${why}` : "";
+              })()}
+            </Alert>
+          ) : null}
+
           {!international && s.status === "paid" ? (
             <Alert tone="info" title="We are arranging a driver">
               Payment received. We will add your driver's name and phone number here as soon as one is assigned.
             </Alert>
           ) : null}
 
-          {!international && ["booked", "in_transit", "delivered", "failed"].includes(s.status) ? (
+          {!international && ["booked", "in_transit", "delivery_attempted", "delivery_rejected", "delivered", "returned", "failed"].includes(s.status) ? (
             <Card>
               <CardBody className="space-y-3 text-sm">
                 <h2 className="text-2xl font-bold">Your driver</h2>
@@ -320,12 +330,12 @@ export function ShipmentDetailPage() {
             </Card>
           ) : null}
 
-          {international && ["booked", "in_transit", "delivered", "failed"].includes(s.status) ? (
+          {international && ["booked", "in_transit", "delivery_attempted", "delivery_rejected", "delivered", "returned", "failed"].includes(s.status) ? (
             <Card>
               <CardBody className="space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-2xl font-bold">Tracking</h2>
-                  {s.status === "booked" || s.status === "in_transit" ? (
+                  {["booked", "in_transit", "delivery_attempted", "delivery_rejected"].includes(s.status) ? (
                     <Button size="sm" variant="secondary" onClick={refresh} loading={busy === "refresh"}>
                       Refresh
                     </Button>
